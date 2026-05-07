@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
-import com.badlogic.gdx.scenes.scene2d.Stage;
 
 public class GameScreen implements Screen {
     private World world;
@@ -58,8 +57,6 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(0,0,0.2f, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         world.step(1/60f, 6, 2);
         debugRenderer.render(world, camera.combined);
         camera.position.set(playerBody.getPosition().x, playerBody.getPosition().y, 10);
