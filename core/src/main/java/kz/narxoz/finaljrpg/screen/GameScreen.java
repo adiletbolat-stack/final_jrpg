@@ -21,8 +21,6 @@ public class GameScreen implements Screen {
     private Texture background;
     private Texture some;
 
-
-    private Body groundBody;
     private OrthographicCamera camera;
 
     private Unit unit;
@@ -95,5 +93,6 @@ public class GameScreen implements Screen {
         batch.dispose();
         background.dispose();
         some.dispose();
+        batch.dispose();
     }
 }
