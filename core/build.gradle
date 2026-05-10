@@ -8,6 +8,8 @@ dependencies {
   api "com.crashinvaders.lml:gdx-autumn:$lmlVersion"
   api "com.crashinvaders.lml:gdx-kiwi:$lmlVersion"
   api "com.github.tommyettinger:anim8-gdx:$anim8Version"
+  compileOnly 'org.projectlombok:lombok:1.18.32'
+  annotationProcessor 'org.projectlombok:lombok:1.18.32'
 
   if(enableGraalNative == 'true') {
     implementation "io.github.berstanio:gdx-svmhelper-annotations:$graalHelperVersion"
