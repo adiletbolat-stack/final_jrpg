@@ -66,8 +66,6 @@ public class GameScreen implements Screen {
         if(Gdx.input.isKeyPressed(Input.Keys.Z)) camera.zoom = 100;
         else camera.zoom = 1;
 
-        System.out.println(unit.getPosition());
-
     }
 
     @Override
