@@ -43,7 +43,7 @@ public class Kubik implements Unit {
         fixtureDef.shape = shape;
         fixtureDef.density = 1.0f;
         fixtureDef.friction = 0.0f;
-        fixtureDef.restitution = 0.0f;
+        fixtureDef.restitution = 0.5f;
 
         body.createFixture(fixtureDef);
 

@@ -6,9 +6,12 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TiledMapLoader;
+import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
-import kz.narxoz.finaljrpg.map.MapBound;
+import kz.narxoz.finaljrpg.map.MapCollision;
 import kz.narxoz.finaljrpg.unit.Unit;
 import kz.narxoz.finaljrpg.unit.impl.Kubik;
 
@@ -23,6 +26,8 @@ public class GameScreen implements Screen {
 
     private OrthographicCamera camera;
 
+    private TiledMap map;
+
     private Unit unit;
 
     @Override
@@ -34,13 +39,12 @@ public class GameScreen implements Screen {
         batch = new SpriteBatch();
         background = new Texture("gameBackground.png");
 
+        map = new TmxMapLoader().load("map.tmx");
+
         some = new Texture("check.png");
         unit = Kubik.builder().world(world).name("some").texture(some).startX(1).startY(1).build();
 
-        MapBound.createBound(world, (camera.viewportWidth/2), 0, (SCREEN_WIDTH/2f)/PPM, 1/PPM);
-        MapBound.createBound(world, (camera.viewportWidth/2), camera.viewportHeight, (SCREEN_WIDTH/2f)/PPM, 1/PPM);
-        MapBound.createBound(world, camera.viewportWidth, camera.viewportHeight/2, 1/PPM, (SCREEN_HEIGHT/2f)/PPM);
-        MapBound.createBound(world, 0, camera.viewportHeight/2, 1/PPM, (SCREEN_HEIGHT/2f)/PPM);
+        new MapCollision(world, map);
 
 
     }
