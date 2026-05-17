@@ -13,13 +13,14 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import kz.narxoz.finaljrpg.screen.GameScreen;
+import kz.narxoz.finaljrpg.screen.MenuScreen;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class Main extends Game {
 
     @Override
     public void create() {
-        this.setScreen(new GameScreen());
+        this.setScreen(new MenuScreen(this));
     }
 
     @Override

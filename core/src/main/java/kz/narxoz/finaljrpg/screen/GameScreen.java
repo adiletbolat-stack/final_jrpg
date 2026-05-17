@@ -11,6 +11,10 @@ import com.badlogic.gdx.maps.tiled.TiledMapLoader;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+
+import kz.narxoz.finaljrpg.Main;
+
+import kz.narxoz.finaljrpg.Main;
 import kz.narxoz.finaljrpg.map.MapCollision;
 import kz.narxoz.finaljrpg.unit.Unit;
 import kz.narxoz.finaljrpg.unit.impl.Kubik;
@@ -18,6 +22,8 @@ import kz.narxoz.finaljrpg.unit.impl.Kubik;
 import static kz.narxoz.finaljrpg.Constants.*;
 
 public class GameScreen implements Screen {
+
+    private final Main game;
     private World world;
     private Box2DDebugRenderer debugRenderer;
     private SpriteBatch batch;
@@ -39,7 +45,7 @@ public class GameScreen implements Screen {
         batch = new SpriteBatch();
         background = new Texture("gameBackground.png");
 
-        map = new TmxMapLoader().load("map.tmx");
+        map = new TmxMapLoader().load("map/map.tmx");
 
         some = new Texture("check.png");
         unit = Kubik.builder().world(world).name("some").texture(some).startX(1).startY(1).build();
@@ -48,6 +54,10 @@ public class GameScreen implements Screen {
 
 
     }
+
+    public GameScreen(Main game) {
+    this.game = game;
+}
 
     @Override
     public void render(float delta) {
