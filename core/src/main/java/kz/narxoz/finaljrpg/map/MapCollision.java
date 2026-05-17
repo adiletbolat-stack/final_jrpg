@@ -21,6 +21,8 @@ public class MapCollision {
 
         BodyDef bodyDef = new BodyDef();
         PolygonShape shape = new PolygonShape();
+
+        
         FixtureDef fixtureDef = new FixtureDef();
         Body body;
 
