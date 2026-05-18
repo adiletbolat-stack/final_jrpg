@@ -1,18 +1,17 @@
 package kz.narxoz.finaljrpg.screen;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Graphics;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import kz.narxoz.finaljrpg.Main;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import kz.narxoz.finaljrpg.Main;
 
-public class MenuScreen implements Screen {
+public class SettingsScreen implements Screen {
 
     private final Main game;
 
@@ -21,7 +20,7 @@ public class MenuScreen implements Screen {
 
     private Texture background;
 
-    public MenuScreen(Main game) {
+    public SettingsScreen(Main game) {
         this.game = game;
     }
 
@@ -41,39 +40,58 @@ public class MenuScreen implements Screen {
 
         stage.addActor(table);
 
-        TextButton playButton = new TextButton("PLAY", skin);
-        TextButton settingsButton = new TextButton("SETTINGS", skin);
-        TextButton exitButton = new TextButton("EXIT", skin);
+        Label title = new Label("SETTINGS", skin);
 
-        table.add(playButton).width(300).height(80).pad(20);
+        CheckBox fullscreenBox = new CheckBox(" Fullscreen", skin);
+
+        Slider volumeSlider = new Slider(0, 100, 1, false, skin);
+
+        volumeSlider.setValue(50);
+
+        TextButton backButton = new TextButton("BACK", skin);
+
+        table.add(title).padBottom(50);
         table.row();
 
-        table.add(settingsButton).width(300).height(80).pad(20);
+        table.add(fullscreenBox).pad(20);
         table.row();
 
-        table.add(exitButton).width(300).height(80).pad(20);
+        table.add(volumeSlider)
+                .width(300)
+                .pad(20);
 
-        playButton.addListener(new ClickListener() {
+        table.row();
+
+        table.add(backButton)
+                .width(250)
+                .height(70)
+                .padTop(40);
+
+        fullscreenBox.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new GameScreen(game));
+                if (fullscreenBox.isChecked()) {
+
+                    Graphics.DisplayMode mode = Gdx.graphics.getDisplayMode();
+
+                    Gdx.graphics.setFullscreenMode(mode);
+
+                } else {
+
+                    Gdx.graphics.setWindowedMode(1920, 1080);
+                }
+
             }
+
         });
 
-        settingsButton.addListener(new ClickListener() {
+        backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new SettingsScreen(game));
+                game.setScreen(new MenuScreen(game));
                 dispose();
-
             }
-        });
 
-        exitButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                Gdx.app.exit();
-            }
         });
     }
 
@@ -92,6 +110,7 @@ public class MenuScreen implements Screen {
         stage.getBatch().end();
 
         stage.act(delta);
+
         stage.draw();
     }
 
@@ -102,17 +121,14 @@ public class MenuScreen implements Screen {
 
     @Override
     public void pause() {
-
     }
 
     @Override
     public void resume() {
-
     }
 
     @Override
     public void hide() {
-
     }
 
     @Override
