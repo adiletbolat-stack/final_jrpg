@@ -13,8 +13,7 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 
-
-
+import kz.narxoz.finaljrpg.command.CommandList;
 import kz.narxoz.finaljrpg.map.MapCollision;
 import kz.narxoz.finaljrpg.unit.Unit;
 import kz.narxoz.finaljrpg.unit.impl.Kubik;
@@ -36,28 +35,24 @@ public class GameScreen implements Screen {
 
     private Unit unit;
 
-
-
     @Override
     public void show() {
-        world = new World(new Vector2(0,-9.8f), true);
+        world = new World(new Vector2(0, -9.8f), true);
         debugRenderer = new Box2DDebugRenderer();
         camera = new OrthographicCamera(SCREEN_WIDTH, SCREEN_HEIGHT);
-        camera.setToOrtho(false, (SCREEN_WIDTH/4f)/PPM, (SCREEN_HEIGHT/4f)/PPM);
+        camera.setToOrtho(false, (SCREEN_WIDTH / 4f) / PPM, (SCREEN_HEIGHT / 4f) / PPM);
         batch = new SpriteBatch();
         background = new Texture("gameBackground.png");
 
         map = new TmxMapLoader().load("map/map.tmx");
-        mapRenderer = new OrthogonalTiledMapRenderer(map, 1f/PPM);
+        mapRenderer = new OrthogonalTiledMapRenderer(map, 1f / PPM);
 
         some = new Texture("check.png");
         unit = Kubik.builder().world(world).name("some").texture(some).startX(1).startY(1).build();
 
         new MapCollision(world, map);
 
-
     }
-
 
     @Override
     public void render(float delta) {
@@ -68,7 +63,7 @@ public class GameScreen implements Screen {
         mapRenderer.setView(camera);
 
         batch.begin();
-        batch.draw(background, 0, 0, MAP_WIDTH/PPM, MAP_HEIGHT/PPM);
+        batch.draw(background, 0, 0, MAP_WIDTH / PPM, MAP_HEIGHT / PPM);
         batch.end();
 
         mapRenderer.render();
@@ -77,12 +72,18 @@ public class GameScreen implements Screen {
         unit.draw(batch);
         batch.end();
 
-
-        world.step(1/60f, 6, 2);
+        world.step(1 / 60f, 6, 2);
         debugRenderer.render(world, camera.combined);
 
-        if(Gdx.input.isKeyPressed(Input.Keys.Z)) camera.zoom = 4;
-        else camera.zoom = 1;
+        if (Gdx.input.isKeyPressed(Input.Keys.Z))
+            camera.zoom = 4;
+        else
+            camera.zoom = 1;
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+
+            CommandList.getInstance().toPause(this);
+        }
 
     }
 

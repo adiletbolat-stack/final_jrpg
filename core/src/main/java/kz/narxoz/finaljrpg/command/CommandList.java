@@ -2,8 +2,12 @@ package kz.narxoz.finaljrpg.command;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
+
 import kz.narxoz.finaljrpg.command.screen.GameScreenCommand;
 import kz.narxoz.finaljrpg.command.screen.MenuScreenCommand;
+import kz.narxoz.finaljrpg.command.screen.PauseScreenCommand;
+import kz.narxoz.finaljrpg.command.screen.ResumeGameCommand;
 import kz.narxoz.finaljrpg.command.screen.ScreenCommand;
 import kz.narxoz.finaljrpg.command.screen.SettingsScreenCommand;
 import kz.narxoz.finaljrpg.command.screen.history.ScreenCommandHistory;
@@ -13,30 +17,51 @@ import java.util.Objects;
 public class CommandList {
     private Game game;
     private static CommandList commandList;
+    private PauseScreenCommand pauseScreenCommand;
 
+    private ResumeGameCommand resumeGameCommand;
 
-    private CommandList(){
+    private CommandList() {
         this.game = (Game) Gdx.app.getApplicationListener();
+
+        pauseScreenCommand = new PauseScreenCommand(game);
     }
 
-    public static CommandList getInstance(){
-        if(Objects.isNull(commandList)) commandList = new CommandList();
+    public static CommandList getInstance() {
+        if (Objects.isNull(commandList))
+            commandList = new CommandList();
         return commandList;
     }
 
-    public void toGame(){
+    public void toGame() {
         new GameScreenCommand(game).execute();
     }
 
-    public void toMenu(){
+    public void toMenu() {
         new MenuScreenCommand(game).execute();
     }
 
-    public void toSettings(){
+    public void toSettings() {
         new SettingsScreenCommand(game).execute();
     }
 
-    public void screenBack(){
+    public void toPause(Screen currentScreen) {
+
+        resumeGameCommand = new ResumeGameCommand(game, currentScreen);
+
+        pauseScreenCommand.execute();
+    }
+
+    public void resumeGame() {
+
+        if (resumeGameCommand != null) {
+
+            resumeGameCommand.execute();
+        }
+    }
+
+    public void screenBack() {
         ScreenCommandHistory.getInstance().pop().undo();
     }
+
 }
