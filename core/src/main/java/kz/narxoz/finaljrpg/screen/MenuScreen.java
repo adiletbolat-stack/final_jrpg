@@ -1,5 +1,6 @@
 package kz.narxoz.finaljrpg.screen;
 
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Texture;
@@ -11,93 +12,25 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import kz.narxoz.finaljrpg.Main;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import kz.narxoz.finaljrpg.ui.UIMenu;
 
 public class MenuScreen implements Screen {
 
-    private final Main game;
-
-    private Stage stage;
-    private Skin skin;
-
-    private Texture background;
-
-    public MenuScreen(Main game) {
-        this.game = game;
-    }
+    private UIMenu menu;
 
     @Override
     public void show() {
-
-        stage = new Stage(new ScreenViewport());
-
-        Gdx.input.setInputProcessor(stage);
-
-        skin = new Skin(Gdx.files.internal("ui/uiskin.json"));
-
-        background = new Texture("menuBackground.png");
-
-        Table table = new Table();
-        table.setFillParent(true);
-
-        stage.addActor(table);
-
-        TextButton playButton = new TextButton("PLAY", skin);
-        TextButton settingsButton = new TextButton("SETTINGS", skin);
-        TextButton exitButton = new TextButton("EXIT", skin);
-
-        table.add(playButton).width(300).height(80).pad(20);
-        table.row();
-
-        table.add(settingsButton).width(300).height(80).pad(20);
-        table.row();
-
-        table.add(exitButton).width(300).height(80).pad(20);
-
-        playButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new GameScreen(game));
-            }
-        });
-
-        settingsButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new SettingsScreen(game));
-                dispose();
-
-            }
-        });
-
-        exitButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                Gdx.app.exit();
-            }
-        });
+        menu = new UIMenu();
     }
 
     @Override
     public void render(float delta) {
-
-        stage.getBatch().begin();
-
-        stage.getBatch().draw(
-                background,
-                0,
-                0,
-                Gdx.graphics.getWidth(),
-                Gdx.graphics.getHeight());
-
-        stage.getBatch().end();
-
-        stage.act(delta);
-        stage.draw();
+        menu.render(delta);
     }
 
     @Override
     public void resize(int width, int height) {
-        stage.getViewport().update(width, height, true);
+        menu.getStage().getViewport().update(width, height, true);
     }
 
     @Override
@@ -117,8 +50,6 @@ public class MenuScreen implements Screen {
 
     @Override
     public void dispose() {
-        stage.dispose();
-        skin.dispose();
-        background.dispose();
+        menu.dispose();
     }
 }

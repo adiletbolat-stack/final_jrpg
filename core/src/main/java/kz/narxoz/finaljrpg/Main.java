@@ -12,6 +12,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import kz.narxoz.finaljrpg.command.CommandList;
 import kz.narxoz.finaljrpg.screen.GameScreen;
 import kz.narxoz.finaljrpg.screen.MenuScreen;
 
@@ -20,7 +21,7 @@ public class Main extends Game {
 
     @Override
     public void create() {
-        this.setScreen(new MenuScreen(this));
+        CommandList.getInstance().toMenu();
     }
 
     @Override
@@ -33,7 +34,7 @@ public class Main extends Game {
 
     @Override
     public void resize(int width, int height) {
-
+        screen.resize(width, height);
     }
 
     @Override

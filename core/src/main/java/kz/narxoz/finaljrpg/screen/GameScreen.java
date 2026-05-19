@@ -1,5 +1,6 @@
 package kz.narxoz.finaljrpg.screen;
 
+import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
@@ -7,14 +8,12 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.maps.tiled.TiledMapLoader;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 
-import kz.narxoz.finaljrpg.Main;
 
-import kz.narxoz.finaljrpg.Main;
+
 import kz.narxoz.finaljrpg.map.MapCollision;
 import kz.narxoz.finaljrpg.unit.Unit;
 import kz.narxoz.finaljrpg.unit.impl.Kubik;
@@ -23,7 +22,6 @@ import static kz.narxoz.finaljrpg.Constants.*;
 
 public class GameScreen implements Screen {
 
-    private final Main game;
     private World world;
     private Box2DDebugRenderer debugRenderer;
     private SpriteBatch batch;
@@ -35,6 +33,8 @@ public class GameScreen implements Screen {
     private TiledMap map;
 
     private Unit unit;
+
+
 
     @Override
     public void show() {
@@ -55,16 +55,13 @@ public class GameScreen implements Screen {
 
     }
 
-    public GameScreen(Main game) {
-    this.game = game;
-}
 
     @Override
     public void render(float delta) {
         unit.update(delta);
 //        camera.position.set(unit.getPosition().x, unit.getPosition().y, 10);
 //        camera.update();
-
+        batch.setProjectionMatrix(camera.combined);
         batch.begin();
         batch.draw(background, 0, 0, SCREEN_WIDTH/PPM, SCREEN_HEIGHT/PPM);
         unit.draw(batch);
@@ -73,7 +70,7 @@ public class GameScreen implements Screen {
 
         world.step(1/60f, 6, 2);
 //        debugRenderer.render(world, camera.combined);
-        batch.setProjectionMatrix(camera.combined);
+
 
         if(Gdx.input.isKeyPressed(Input.Keys.Z)) camera.zoom = 100;
         else camera.zoom = 1;
@@ -107,6 +104,5 @@ public class GameScreen implements Screen {
         batch.dispose();
         background.dispose();
         some.dispose();
-        batch.dispose();
     }
 }
