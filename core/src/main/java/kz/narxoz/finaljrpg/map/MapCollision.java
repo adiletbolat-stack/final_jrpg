@@ -22,7 +22,7 @@ public class MapCollision {
         BodyDef bodyDef = new BodyDef();
         PolygonShape shape = new PolygonShape();
 
-        
+
         FixtureDef fixtureDef = new FixtureDef();
         Body body;
 
@@ -73,7 +73,6 @@ public class MapCollision {
                 fdef.shape = shape;
                 fdef.friction = 0f;
                 body.createFixture(fdef);
-                shape.dispose();
             }
 
         }

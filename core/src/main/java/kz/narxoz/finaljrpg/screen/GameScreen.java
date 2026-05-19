@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
+import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 
@@ -31,6 +32,7 @@ public class GameScreen implements Screen {
     private OrthographicCamera camera;
 
     private TiledMap map;
+    private OrthogonalTiledMapRenderer mapRenderer;
 
     private Unit unit;
 
@@ -41,11 +43,12 @@ public class GameScreen implements Screen {
         world = new World(new Vector2(0,-9.8f), true);
         debugRenderer = new Box2DDebugRenderer();
         camera = new OrthographicCamera(SCREEN_WIDTH, SCREEN_HEIGHT);
-        camera.setToOrtho(false, SCREEN_WIDTH/PPM, SCREEN_HEIGHT/PPM);
+        camera.setToOrtho(false, (SCREEN_WIDTH/4f)/PPM, (SCREEN_HEIGHT/4f)/PPM);
         batch = new SpriteBatch();
         background = new Texture("gameBackground.png");
 
         map = new TmxMapLoader().load("map/map.tmx");
+        mapRenderer = new OrthogonalTiledMapRenderer(map, 1f/PPM);
 
         some = new Texture("check.png");
         unit = Kubik.builder().world(world).name("some").texture(some).startX(1).startY(1).build();
@@ -59,20 +62,26 @@ public class GameScreen implements Screen {
     @Override
     public void render(float delta) {
         unit.update(delta);
-//        camera.position.set(unit.getPosition().x, unit.getPosition().y, 10);
-//        camera.update();
+        camera.position.set(unit.getPosition().x, unit.getPosition().y, 10);
+        camera.update();
         batch.setProjectionMatrix(camera.combined);
+        mapRenderer.setView(camera);
+
         batch.begin();
-        batch.draw(background, 0, 0, SCREEN_WIDTH/PPM, SCREEN_HEIGHT/PPM);
+        batch.draw(background, 0, 0, MAP_WIDTH/PPM, MAP_HEIGHT/PPM);
+        batch.end();
+
+        mapRenderer.render();
+
+        batch.begin();
         unit.draw(batch);
         batch.end();
 
 
         world.step(1/60f, 6, 2);
-//        debugRenderer.render(world, camera.combined);
+        debugRenderer.render(world, camera.combined);
 
-
-        if(Gdx.input.isKeyPressed(Input.Keys.Z)) camera.zoom = 100;
+        if(Gdx.input.isKeyPressed(Input.Keys.Z)) camera.zoom = 4;
         else camera.zoom = 1;
 
     }
@@ -104,5 +113,7 @@ public class GameScreen implements Screen {
         batch.dispose();
         background.dispose();
         some.dispose();
+        mapRenderer.dispose();
+        map.dispose();
     }
 }
