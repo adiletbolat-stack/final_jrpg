@@ -17,14 +17,11 @@ import java.util.Objects;
 public class CommandList {
     private Game game;
     private static CommandList commandList;
-    private PauseScreenCommand pauseScreenCommand;
 
     private ResumeGameCommand resumeGameCommand;
 
     private CommandList() {
         this.game = (Game) Gdx.app.getApplicationListener();
-
-        pauseScreenCommand = new PauseScreenCommand(game);
     }
 
     public static CommandList getInstance() {
@@ -47,9 +44,9 @@ public class CommandList {
 
     public void toPause(Screen currentScreen) {
 
-        resumeGameCommand = new ResumeGameCommand(game, currentScreen);
+    new ResumeGameCommand(game, currentScreen);
 
-        pauseScreenCommand.execute();
+        new PauseScreenCommand(game).execute();
     }
 
     public void resumeGame() {
@@ -60,8 +57,19 @@ public class CommandList {
         }
     }
 
-    public void screenBack() {
-        ScreenCommandHistory.getInstance().pop().undo();
-    }
+   public void screenBack(){
+
+    if(ScreenCommandHistory
+        .getInstance()
+        .getCommands()
+        .size() <= 1) return;
+
+    ScreenCommandHistory history =
+        ScreenCommandHistory.getInstance();
+
+    history.pop();
+
+    history.pop().execute();
+}
 
 }
