@@ -1,6 +1,9 @@
 package kz.narxoz.finaljrpg.screen;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import kz.narxoz.finaljrpg.command.CommandList;
 import kz.narxoz.finaljrpg.ui.UIPause;
 
 public class PauseScreen implements Screen {
@@ -15,6 +18,7 @@ public class PauseScreen implements Screen {
     @Override
     public void render(float delta) {
         pauseMenu.render(delta);
+        if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) CommandList.getInstance().resumeGame();
     }
 
     @Override
@@ -27,7 +31,6 @@ public class PauseScreen implements Screen {
 
     }
 
-    @Override
     public void resume() {
 
     }
