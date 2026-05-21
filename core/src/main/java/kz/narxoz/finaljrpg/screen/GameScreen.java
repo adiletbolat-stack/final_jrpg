@@ -34,9 +34,15 @@ public class GameScreen implements Screen {
     private OrthogonalTiledMapRenderer mapRenderer;
 
     private Unit unit;
+    private boolean initialized;
 
     @Override
     public void show() {
+        if (initialized) {
+            return;
+        }
+
+        initialized = true;
         world = new World(new Vector2(0, -9.8f), true);
         debugRenderer = new Box2DDebugRenderer();
         camera = new OrthographicCamera(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -109,6 +115,10 @@ public class GameScreen implements Screen {
 
     @Override
     public void dispose() {
+        if (!initialized) {
+            return;
+        }
+
         world.dispose();
         debugRenderer.dispose();
         batch.dispose();
@@ -116,5 +126,6 @@ public class GameScreen implements Screen {
         some.dispose();
         mapRenderer.dispose();
         map.dispose();
+        initialized = false;
     }
 }
