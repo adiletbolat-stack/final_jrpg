@@ -1,7 +1,5 @@
 package kz.narxoz.finaljrpg.ui;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Graphics;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -44,17 +42,7 @@ public class UISettings extends UIElement{
         fullscreenBox.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                if (fullscreenBox.isChecked()) {
-
-                    Graphics.DisplayMode mode = Gdx.graphics.getDisplayMode();
-
-                    Gdx.graphics.setFullscreenMode(mode);
-
-                } else {
-
-                    Gdx.graphics.setWindowedMode(1920, 1080);
-                }
-
+                CommandList.getInstance().fullscreen(fullscreenBox.isChecked());
             }
 
         });

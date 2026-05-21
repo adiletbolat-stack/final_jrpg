@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 
 import kz.narxoz.finaljrpg.command.screen.GameScreenCommand;
+import kz.narxoz.finaljrpg.command.screen.FullscreenCommand;
 import kz.narxoz.finaljrpg.command.screen.MenuScreenCommand;
 import kz.narxoz.finaljrpg.command.screen.PauseScreenCommand;
 import kz.narxoz.finaljrpg.command.screen.ResumeGameCommand;
@@ -20,6 +21,7 @@ public class CommandList {
     private static CommandList commandList;
 
     private ResumeGameCommand resumeGameCommand;
+
 
     private CommandList() {
         this.game = (Game) Gdx.app.getApplicationListener();
@@ -43,6 +45,10 @@ public class CommandList {
         new SettingsScreenCommand(game).execute();
     }
 
+    public void fullscreen(boolean enabled) {
+        new FullscreenCommand(enabled).execute();
+    }
+
     public void toVictory(VictoryEvent victoryEvent) {
         new VictoryScreenCommand(game, victoryEvent).execute();
     }
@@ -53,6 +59,7 @@ public class CommandList {
 
         new PauseScreenCommand(game).execute();
     }
+
 
     public void resumeGame() {
 
