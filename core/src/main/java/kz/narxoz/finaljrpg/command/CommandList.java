@@ -10,7 +10,7 @@ import kz.narxoz.finaljrpg.command.screen.PauseScreenCommand;
 import kz.narxoz.finaljrpg.command.screen.ResumeGameCommand;
 import kz.narxoz.finaljrpg.command.screen.SettingsScreenCommand;
 import kz.narxoz.finaljrpg.command.screen.history.ScreenCommandHistory;
-import kz.narxoz.finaljrpg.command.victory.VictoryScreenCommand;
+import kz.narxoz.finaljrpg.command.screen.VictoryScreenCommand;
 import kz.narxoz.finaljrpg.battle.event.VictoryEvent;
 
 import java.util.Objects;

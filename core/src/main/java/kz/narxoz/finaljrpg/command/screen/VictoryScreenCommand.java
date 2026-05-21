@@ -1,8 +1,7 @@
-package kz.narxoz.finaljrpg.command.victory;
+package kz.narxoz.finaljrpg.command.screen;
 
 import com.badlogic.gdx.Game;
 import kz.narxoz.finaljrpg.battle.event.VictoryEvent;
-import kz.narxoz.finaljrpg.command.screen.ScreenCommand;
 import kz.narxoz.finaljrpg.screen.VictoryScreen;
 
 public class VictoryScreenCommand extends ScreenCommand {
