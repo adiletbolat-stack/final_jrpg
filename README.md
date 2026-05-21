@@ -1,33 +1,69 @@
 # final_jrpg
 
-A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
+`final_jrpg` is a libGDX tactical action prototype about replaying a fight through several player characters. The player controls three characters one by one, records actions for each of them, and can switch back to another character with a time reset. Previously recorded characters replay their actions, while enemies react to the current battle state.
 
-This project was generated with a template including simple application launchers and an `ApplicationAdapter` extension that draws a simple GUI on the screen.
+## Game Idea
 
-## Platforms
+The battle starts with three enemies and three player characters entering from spawn points on the Tiled map. Enemies first move toward their assigned points, then switch to attacking the nearest player character. The player wins by destroying all enemies.
 
-- `core`: Main module with the application logic shared by all platforms.
-- `lwjgl3`: Primary desktop platform using LWJGL3; was called 'desktop' in older docs.
+Enemy types:
 
-## Gradle
+- Normal enemy: `16x32`
+- Heavy enemy: `32x32`
+- Flying enemy: `16x16`
 
-This project uses [Gradle](https://gradle.org/) to manage dependencies.
-The Gradle wrapper was included, so you can run Gradle tasks using `gradlew.bat` or `./gradlew` commands.
-Useful Gradle tasks and flags:
+Player characters currently use placeholder boxes and share the normal character size. Textures can be added later without changing the battle structure.
 
-- `--continue`: when using this flag, errors will not stop the tasks from running.
-- `--daemon`: thanks to this flag, Gradle daemon will be used to run chosen tasks.
-- `--offline`: when using this flag, cached dependency archives will be used.
-- `--refresh-dependencies`: this flag forces validation of all dependencies. Useful for snapshot versions.
-- `build`: builds sources and archives of every project.
-- `cleanEclipse`: removes Eclipse project data.
-- `cleanIdea`: removes IntelliJ project data.
-- `clean`: removes `build` folders, which store compiled classes and built archives.
-- `eclipse`: generates Eclipse project data.
-- `idea`: generates IntelliJ project data.
-- `lwjgl3:jar`: builds application's runnable jar, which can be found at `lwjgl3/build/libs`.
-- `lwjgl3:run`: starts the application.
-- `test`: runs unit tests (if any).
+## Controls
 
-Note that most tasks that are not specific to a single project can be run with `name:` prefix, where the `name` should be replaced with the ID of a specific project.
-For example, `core:clean` removes `build` folder only from the `core` project.
+- `A` / `D`: move left or right
+- `W`: jump
+- Left mouse button: shoot toward the cursor
+- `1`, `2`, `3`: switch to a specific player character
+- `TAB`: switch to the next player character
+- `Z`: zoom camera out
+- `ESC`: pause or resume from pause
+
+## Battle Rules
+
+- Player characters do not collide with each other.
+- Player characters still collide with enemies and the map.
+- Enemies collide with the map and player characters.
+- Projectiles damage only the opposite team.
+- The timer is shown at the top center of the game screen.
+- When all enemies are defeated, the victory screen shows final time and score.
+
+## Project Structure
+
+- `core`: shared game logic, screens, battle systems, commands, and UI.
+- `lwjgl3`: desktop launcher.
+- `assets`: textures, UI skin, and Tiled map files.
+
+Important battle packages:
+
+- `battle`: battle session, units, projectiles, timeline, factories, and shared types.
+- `battle.behavior`: behavior strategies for players and enemies.
+- `battle.movement`: movement strategies for different unit types.
+- `battle.unit`: concrete player and enemy classes.
+- `battle.event`: victory observer event types.
+- `command`: screen transition commands.
+
+## Running
+
+Use the Gradle wrapper:
+
+```bash
+./gradlew lwjgl3:run
+```
+
+On Windows:
+
+```bat
+gradlew.bat lwjgl3:run
+```
+
+Build the project:
+
+```bash
+./gradlew build
+```
