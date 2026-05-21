@@ -44,7 +44,7 @@ public class CommandList {
 
     public void toPause(Screen currentScreen) {
 
-    new ResumeGameCommand(game, currentScreen);
+        resumeGameCommand = new ResumeGameCommand(game, currentScreen);
 
         new PauseScreenCommand(game).execute();
     }

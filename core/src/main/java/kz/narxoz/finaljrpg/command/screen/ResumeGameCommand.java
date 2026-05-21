@@ -16,7 +16,6 @@ public class ResumeGameCommand extends ScreenCommand {
 
     @Override
     public void execute() {
-
         game.setScreen(gameScreen);
     }
 }

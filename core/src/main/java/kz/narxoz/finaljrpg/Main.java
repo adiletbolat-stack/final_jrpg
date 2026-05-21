@@ -29,7 +29,6 @@ public class Main extends Game {
         Gdx.gl.glClearColor(0,0,0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         screen.render(Gdx.graphics.getDeltaTime());
-        if(Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) Gdx.app.exit();
     }
 
     @Override
