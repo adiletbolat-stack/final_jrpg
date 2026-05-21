@@ -123,11 +123,11 @@ public class BattleSession implements VictorySubject {
 
         float direction = 0f;
 
-        if (input.isLeft()) {
+        if (input.left()) {
             direction -= 1f;
         }
 
-        if (input.isRight()) {
+        if (input.right()) {
             direction += 1f;
         }
 
@@ -137,13 +137,13 @@ public class BattleSession implements VictorySubject {
             moveHorizontally(unit, direction);
         }
 
-        if (input.isJump() && unit.getType().getJumpImpulse() > 0f && isGrounded(unit.getBody())) {
+        if (input.jump() && unit.getType().getJumpImpulse() > 0f && isGrounded(unit.getBody())) {
             Body body = unit.getBody();
             body.applyLinearImpulse(0f, unit.getType().getJumpImpulse(), body.getWorldCenter().x, body.getWorldCenter().y, true);
         }
 
-        if (input.isShoot() && unit.canShoot()) {
-            shootAt(unit, input.getAimPoint());
+        if (input.shoot() && unit.canShoot()) {
+            shootAt(unit, input.aimPoint());
         }
     }
 

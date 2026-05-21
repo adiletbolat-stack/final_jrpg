@@ -1,9 +1,12 @@
 package kz.narxoz.finaljrpg.battle;
 
+import lombok.Getter;
+
 import static kz.narxoz.finaljrpg.Constants.PPM;
 
+@Getter
 public enum BattleUnitType {
-    NORMAL(16f / PPM, 32f / PPM, 4f, 0.2f, 100f, 0.9f, 18f),
+    NORMAL(32f / PPM, 32f / PPM, 2.5f, 0.2f, 100f, 0.9f, 18f),
     HEAVY(32f / PPM, 32f / PPM, 2.2f, 0.2f, 220f, 1.35f, 32f),
     FLYING(16f / PPM, 16f / PPM, 3.2f, 0f, 70f, 0.65f, 14f);
 
@@ -25,31 +28,4 @@ public enum BattleUnitType {
         this.damage = damage;
     }
 
-    public float getWidth() {
-        return width;
-    }
-
-    public float getHeight() {
-        return height;
-    }
-
-    public float getSpeed() {
-        return speed;
-    }
-
-    public float getJumpImpulse() {
-        return jumpImpulse;
-    }
-
-    public float getMaxHealth() {
-        return maxHealth;
-    }
-
-    public float getAttackCooldown() {
-        return attackCooldown;
-    }
-
-    public float getDamage() {
-        return damage;
-    }
 }

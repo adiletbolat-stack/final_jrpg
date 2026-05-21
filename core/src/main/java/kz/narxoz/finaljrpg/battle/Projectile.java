@@ -1,12 +1,17 @@
 package kz.narxoz.finaljrpg.battle;
 
 import com.badlogic.gdx.math.Vector2;
+import lombok.Getter;
 
 public class Projectile {
+    @Getter
     private final Team team;
+    @Getter
     private final Vector2 position;
     private final Vector2 velocity;
+    @Getter
     private final float damage;
+    @Getter
     private boolean alive = true;
 
     public Projectile(Team team, Vector2 position, Vector2 velocity, float damage) {
@@ -18,22 +23,6 @@ public class Projectile {
 
     public void update(float delta) {
         position.mulAdd(velocity, delta);
-    }
-
-    public Team getTeam() {
-        return team;
-    }
-
-    public Vector2 getPosition() {
-        return position;
-    }
-
-    public float getDamage() {
-        return damage;
-    }
-
-    public boolean isAlive() {
-        return alive;
     }
 
     public void destroy() {
