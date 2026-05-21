@@ -16,6 +16,8 @@ import kz.narxoz.finaljrpg.command.CommandList;
 import kz.narxoz.finaljrpg.screen.GameScreen;
 import kz.narxoz.finaljrpg.screen.MenuScreen;
 
+import java.util.Objects;
+
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class Main extends Game {
 
@@ -30,12 +32,6 @@ public class Main extends Game {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         screen.render(Gdx.graphics.getDeltaTime());
     }
-
-    @Override
-    public void resize(int width, int height) {
-        screen.resize(width, height);
-    }
-
     @Override
     public void dispose() {
         screen.dispose();

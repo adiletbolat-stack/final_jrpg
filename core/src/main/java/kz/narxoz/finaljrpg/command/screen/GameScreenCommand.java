@@ -7,17 +7,13 @@ import kz.narxoz.finaljrpg.screen.MenuScreen;
 
 public class GameScreenCommand extends ScreenCommand{
 
-    private Screen gameScreen;
     public GameScreenCommand(Game game) {
         super(game);
     }
 
     @Override
     public void execute() {
-        if(game.getScreen() instanceof MenuScreen){
-            gameScreen = new GameScreen();
-            game.setScreen(gameScreen);
-        } else game.setScreen(gameScreen);
+        game.setScreen(new GameScreen());
 
         history.push(this);
     }

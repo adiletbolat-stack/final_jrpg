@@ -45,6 +45,8 @@ public class GameScreen implements Screen {
 
     @Override
     public void show() {
+        Gdx.input.setInputProcessor(null);
+
         if (initialized) {
             return;
         }
@@ -166,7 +168,7 @@ public class GameScreen implements Screen {
 
     @Override
     public void resume() {
-
+        Gdx.input.setInputProcessor(null);
     }
 
     @Override

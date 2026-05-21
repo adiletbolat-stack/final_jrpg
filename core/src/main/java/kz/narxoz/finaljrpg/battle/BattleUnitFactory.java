@@ -67,8 +67,8 @@ public class BattleUnitFactory {
         fixtureDef.restitution = 0f;
         fixtureDef.filter.categoryBits = team == Team.PLAYER ? CollisionCategory.PLAYER : CollisionCategory.ENEMY;
         fixtureDef.filter.maskBits = team == Team.PLAYER
-            ? (short) (CollisionCategory.TERRAIN | CollisionCategory.ENEMY)
-            : (short) (CollisionCategory.TERRAIN | CollisionCategory.PLAYER | CollisionCategory.ENEMY);
+            ? CollisionCategory.TERRAIN
+            : (short) (CollisionCategory.TERRAIN | CollisionCategory.PLAYER);
 
         body.createFixture(fixtureDef);
         shape.dispose();

@@ -48,6 +48,8 @@ public class BattleUnit {
             return;
         }
 
+        body.setActive(true);
+        body.setAwake(true);
         attackTimer = Math.max(0f, attackTimer - delta);
 
         if (behavior != null) {

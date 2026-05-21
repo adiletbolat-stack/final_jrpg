@@ -33,7 +33,6 @@ public class UIPause extends UIElement {
             .pad(20);
 
         table.row();
-
         table.add(menuButton)
             .width(300)
             .height(80)
