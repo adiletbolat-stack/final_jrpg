@@ -8,11 +8,11 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.physics.box2d.*;
-import kz.narxoz.finaljrpg.battle.CollisionCategory;
+import kz.narxoz.finaljrpg.Constants;
 
 import java.util.Objects;
 
-import static kz.narxoz.finaljrpg.Constants.PPM;
+import static kz.narxoz.finaljrpg.Constants.*;
 
 public class MapCollision {
     public MapCollision(World world, TiledMap map){
@@ -46,8 +46,8 @@ public class MapCollision {
 
                 fixtureDef.shape = shape;
                 fixtureDef.friction = 0f;
-                fixtureDef.filter.categoryBits = CollisionCategory.TERRAIN;
-                fixtureDef.filter.maskBits = CollisionCategory.PLAYER | CollisionCategory.ENEMY;
+                fixtureDef.filter.categoryBits = TERRAIN;
+                fixtureDef.filter.maskBits = PLAYER | ENEMY;
 
                 body.createFixture(fixtureDef);
             }
@@ -75,8 +75,8 @@ public class MapCollision {
                 FixtureDef fdef = new FixtureDef();
                 fdef.shape = shape;
                 fdef.friction = 0f;
-                fdef.filter.categoryBits = CollisionCategory.TERRAIN;
-                fdef.filter.maskBits = CollisionCategory.PLAYER | CollisionCategory.ENEMY;
+                fdef.filter.categoryBits = TERRAIN;
+                fdef.filter.maskBits = Constants.PLAYER | Constants.ENEMY;
                 body.createFixture(fdef);
             }
 

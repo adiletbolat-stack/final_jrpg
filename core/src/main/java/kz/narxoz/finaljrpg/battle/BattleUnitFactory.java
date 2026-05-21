@@ -7,6 +7,7 @@ import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
+import kz.narxoz.finaljrpg.Constants;
 import kz.narxoz.finaljrpg.battle.behavior.EnemyRallyBehavior;
 import kz.narxoz.finaljrpg.battle.behavior.PlayerReplayBehavior;
 import kz.narxoz.finaljrpg.battle.unit.FlyingEnemy;
@@ -65,10 +66,10 @@ public class BattleUnitFactory {
         fixtureDef.density = type == BattleUnitType.HEAVY ? 2f : 1f;
         fixtureDef.friction = 0f;
         fixtureDef.restitution = 0f;
-        fixtureDef.filter.categoryBits = team == Team.PLAYER ? CollisionCategory.PLAYER : CollisionCategory.ENEMY;
+        fixtureDef.filter.categoryBits = team == Team.PLAYER ? Constants.PLAYER : Constants.ENEMY;
         fixtureDef.filter.maskBits = team == Team.PLAYER
-            ? CollisionCategory.TERRAIN
-            : (short) (CollisionCategory.TERRAIN | CollisionCategory.PLAYER);
+            ? Constants.TERRAIN
+            : (short) (Constants.TERRAIN | Constants.PLAYER);
 
         body.createFixture(fixtureDef);
         shape.dispose();
