@@ -8,9 +8,10 @@ import kz.narxoz.finaljrpg.command.screen.GameScreenCommand;
 import kz.narxoz.finaljrpg.command.screen.MenuScreenCommand;
 import kz.narxoz.finaljrpg.command.screen.PauseScreenCommand;
 import kz.narxoz.finaljrpg.command.screen.ResumeGameCommand;
-import kz.narxoz.finaljrpg.command.screen.ScreenCommand;
 import kz.narxoz.finaljrpg.command.screen.SettingsScreenCommand;
 import kz.narxoz.finaljrpg.command.screen.history.ScreenCommandHistory;
+import kz.narxoz.finaljrpg.command.victory.VictoryScreenCommand;
+import kz.narxoz.finaljrpg.battle.event.VictoryEvent;
 
 import java.util.Objects;
 
@@ -40,6 +41,10 @@ public class CommandList {
 
     public void toSettings() {
         new SettingsScreenCommand(game).execute();
+    }
+
+    public void toVictory(VictoryEvent victoryEvent) {
+        new VictoryScreenCommand(game, victoryEvent).execute();
     }
 
     public void toPause(Screen currentScreen) {
