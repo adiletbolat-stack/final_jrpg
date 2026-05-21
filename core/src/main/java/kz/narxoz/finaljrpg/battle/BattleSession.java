@@ -140,6 +140,7 @@ public class BattleSession implements VictorySubject {
         if (input.jump() && unit.getType().getJumpImpulse() > 0f && isGrounded(unit.getBody())) {
             Body body = unit.getBody();
             body.applyLinearImpulse(0f, unit.getType().getJumpImpulse(), body.getWorldCenter().x, body.getWorldCenter().y, true);
+            unit.playJumpSound();
         }
 
         if (input.shoot() && unit.canShoot()) {
@@ -219,6 +220,7 @@ public class BattleSession implements VictorySubject {
 
         projectiles.add(new Projectile(shooter.getTeam(), spawnPosition, velocity, shooter.getType().getDamage()));
         shooter.resetAttackTimer();
+        shooter.playShootSound();
     }
 
     public Vector2 getCameraTarget() {

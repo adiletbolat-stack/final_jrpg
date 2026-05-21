@@ -9,6 +9,7 @@ public class PlayerMovement implements BattleMovement {
         Body body = unit.getBody();
         body.setAwake(true);
         body.setLinearVelocity(Math.signum(direction) * unit.getType().getSpeed(), body.getLinearVelocity().y);
+        unit.playWalkSound();
     }
 
     @Override

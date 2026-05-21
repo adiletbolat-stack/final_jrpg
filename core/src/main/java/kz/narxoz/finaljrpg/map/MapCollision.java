@@ -2,86 +2,35 @@ package kz.narxoz.finaljrpg.map;
 
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.MapObject;
-import com.badlogic.gdx.maps.objects.PolygonMapObject;
-import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.math.Polygon;
-import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.physics.box2d.*;
-import kz.narxoz.finaljrpg.Constants;
+import com.badlogic.gdx.physics.box2d.World;
+import kz.narxoz.finaljrpg.map.collision.CollisionHandler;
+import kz.narxoz.finaljrpg.map.collision.PolygonCollisionHandler;
+import kz.narxoz.finaljrpg.map.collision.RectangleCollisionHandler;
 
 import java.util.Objects;
 
-import static kz.narxoz.finaljrpg.Constants.*;
-
 public class MapCollision {
-    public MapCollision(World world, TiledMap map){
-        MapLayer collision = map.getLayers().get("collisions");
+
+    private static final String COLLISION_LAYER = "collisions";
+
+    private final CollisionHandler collisionHandler;
+
+    public MapCollision(World world, TiledMap map) {
+        collisionHandler = buildCollisionHandler();
+        MapLayer collision = map.getLayers().get(COLLISION_LAYER);
 
         if (Objects.isNull(collision)) throw new IllegalStateException("Map does not have any collisions");
 
-        BodyDef bodyDef = new BodyDef();
-        PolygonShape shape = new PolygonShape();
-
-
-        FixtureDef fixtureDef = new FixtureDef();
-        Body body;
-
-        for (MapObject obj : collision.getObjects()){
-            if (obj instanceof RectangleMapObject rectangleMapObject){
-                Rectangle rect = rectangleMapObject.getRectangle();
-
-
-                bodyDef.type = BodyDef.BodyType.StaticBody;
-
-                float centerX = (rect.getX() + rect.getWidth() / 2f) / PPM;
-                float centerY = (rect.getY() + rect.getHeight() / 2f) / PPM;
-                bodyDef.position.set(centerX, centerY);
-
-                body = world.createBody(bodyDef);
-
-                float halfWidth = (rect.getWidth() / 2f) / PPM;
-                float halfHeight = (rect.getHeight() / 2f) / PPM;
-                shape.setAsBox(halfWidth, halfHeight);
-
-                fixtureDef.shape = shape;
-                fixtureDef.friction = 0f;
-                fixtureDef.filter.categoryBits = TERRAIN;
-                fixtureDef.filter.maskBits = PLAYER | ENEMY;
-
-                body.createFixture(fixtureDef);
-            }
-
-            else if (obj instanceof PolygonMapObject polyObject) {
-                Polygon polygon = polyObject.getPolygon();
-
-
-                float[] vertices = polygon.getTransformedVertices();
-
-
-                float[] worldVertices = new float[vertices.length];
-                for (int i = 0; i < vertices.length; i++) {
-                    worldVertices[i] = vertices[i] / PPM;
-                }
-
-                BodyDef bdef = new BodyDef();
-                bdef.type = BodyDef.BodyType.StaticBody;
-
-                bdef.position.set(0, 0);
-                body = world.createBody(bdef);
-
-                shape.set(worldVertices);
-
-                FixtureDef fdef = new FixtureDef();
-                fdef.shape = shape;
-                fdef.friction = 0f;
-                fdef.filter.categoryBits = TERRAIN;
-                fdef.filter.maskBits = Constants.PLAYER | Constants.ENEMY;
-                body.createFixture(fdef);
-            }
-
+        for (MapObject object : collision.getObjects()) {
+            collisionHandler.handle(object, world);
         }
+    }
 
-        shape.dispose();
+    private CollisionHandler buildCollisionHandler() {
+        CollisionHandler rectangleHandler = new RectangleCollisionHandler();
+        rectangleHandler.setNext(new PolygonCollisionHandler());
+
+        return rectangleHandler;
     }
 }

@@ -3,6 +3,8 @@ package kz.narxoz.finaljrpg.battle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
+import kz.narxoz.finaljrpg.audio.BattleSoundPlayer;
+import kz.narxoz.finaljrpg.audio.BattleSoundProfile;
 import kz.narxoz.finaljrpg.battle.behavior.UnitBehavior;
 import kz.narxoz.finaljrpg.battle.movement.BattleMovement;
 import lombok.Getter;
@@ -10,6 +12,8 @@ import lombok.Setter;
 
 @Getter
 public class BattleUnit {
+    private static final float WALK_SOUND_INTERVAL = 0.28f;
+
     private final String name;
     private final Team team;
     private final BattleUnitType type;
@@ -21,13 +25,29 @@ public class BattleUnit {
     private final float height;
     private final float maxHealth;
     private final BattleMovement movement;
+    private final BattleSoundProfile soundProfile;
 
     @Setter
     private UnitBehavior behavior;
     private float health;
     private float attackTimer;
+    private float walkSoundTimer;
 
     public BattleUnit(String name, Team team, BattleUnitType type, Body body, Vector2 spawn, Vector2 rallyPoint, Color color, BattleMovement movement) {
+        this(name, team, type, body, spawn, rallyPoint, color, movement, BattleSoundProfile.EMPTY);
+    }
+
+    public BattleUnit(
+        String name,
+        Team team,
+        BattleUnitType type,
+        Body body,
+        Vector2 spawn,
+        Vector2 rallyPoint,
+        Color color,
+        BattleMovement movement,
+        BattleSoundProfile soundProfile
+    ) {
         this.name = name;
         this.team = team;
         this.type = type;
@@ -39,10 +59,13 @@ public class BattleUnit {
         this.height = type.getHeight();
         this.maxHealth = type.getMaxHealth();
         this.movement = movement;
+        this.soundProfile = soundProfile;
         this.health = maxHealth;
     }
 
     public void update(BattleSession session, float delta) {
+        walkSoundTimer = Math.max(0f, walkSoundTimer - delta);
+
         if (isDead()) {
             body.setLinearVelocity(0f, 0f);
             return;
@@ -80,6 +103,23 @@ public class BattleUnit {
 
     public void resetAttackTimer() {
         attackTimer = type.getAttackCooldown();
+    }
+
+    public void playWalkSound() {
+        if (walkSoundTimer > 0f) {
+            return;
+        }
+
+        BattleSoundPlayer.play(soundProfile.walkSoundPath());
+        walkSoundTimer = WALK_SOUND_INTERVAL;
+    }
+
+    public void playShootSound() {
+        BattleSoundPlayer.play(soundProfile.shootSoundPath());
+    }
+
+    public void playJumpSound() {
+        BattleSoundPlayer.play(soundProfile.jumpSoundPath());
     }
 
     public Vector2 getPosition() {

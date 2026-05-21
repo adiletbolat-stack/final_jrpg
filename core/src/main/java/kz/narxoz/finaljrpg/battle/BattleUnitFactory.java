@@ -8,6 +8,7 @@ import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import kz.narxoz.finaljrpg.Constants;
+import kz.narxoz.finaljrpg.audio.BattleSoundProfile;
 import kz.narxoz.finaljrpg.battle.behavior.EnemyRallyBehavior;
 import kz.narxoz.finaljrpg.battle.behavior.PlayerReplayBehavior;
 import kz.narxoz.finaljrpg.battle.unit.FlyingEnemy;
@@ -16,6 +17,14 @@ import kz.narxoz.finaljrpg.battle.unit.NormalEnemy;
 import kz.narxoz.finaljrpg.battle.unit.PlayerCharacter;
 
 public class BattleUnitFactory {
+    private static final BattleSoundProfile[] PLAYER_SOUND_PROFILES = {
+        new BattleSoundProfile("audio/player_walk.mp3", "audio/plasma_gun.mp3", "audio/player_jump.mp3"),
+        new BattleSoundProfile("audio/player_walk.mp3", "audio/shotgun_shoot.mp3", "audio/player_jump.mp3"),
+        new BattleSoundProfile("audio/player_walk.mp3", "audio/machinegun_shoot.mp3", "audio/player_jump.mp3")
+    };
+    private static final BattleSoundProfile ENEMY_SOUND_PROFILE =
+        new BattleSoundProfile(null, "audio/enemy_shoot.mp3", null);
+
     private final World world;
 
     public BattleUnitFactory(World world) {
@@ -25,7 +34,13 @@ public class BattleUnitFactory {
     public BattleUnit createPlayer(int index, Vector2 spawn) {
         Vector2 unitSpawn = new Vector2(spawn.x + index * 0.35f, spawn.y);
         Body body = createBody(Team.PLAYER, BattleUnitType.NORMAL, unitSpawn);
-        BattleUnit unit = new PlayerCharacter("Player " + (index + 1), body, unitSpawn, new Color(0.25f, 0.65f, 1f, 1f));
+        BattleUnit unit = new PlayerCharacter(
+            "Player " + (index + 1),
+            body,
+            unitSpawn,
+            new Color(0.25f, 0.65f, 1f, 1f),
+            getPlayerSoundProfile(index)
+        );
         unit.setBehavior(new PlayerReplayBehavior(index));
         return unit;
     }
@@ -39,12 +54,16 @@ public class BattleUnitFactory {
                 : new Color(0.9f, 0.35f, 0.35f, 1f);
         Body body = createBody(Team.ENEMY, type, unitSpawn);
         BattleUnit unit = switch (type) {
-            case HEAVY -> new HeavyEnemy("Heavy enemy", body, unitSpawn, rallyPoint, color);
-            case FLYING -> new FlyingEnemy("Flying enemy", body, unitSpawn, rallyPoint, color);
-            case NORMAL -> new NormalEnemy("Normal enemy", body, unitSpawn, rallyPoint, color);
+            case HEAVY -> new HeavyEnemy("Heavy enemy", body, unitSpawn, rallyPoint, color, ENEMY_SOUND_PROFILE);
+            case FLYING -> new FlyingEnemy("Flying enemy", body, unitSpawn, rallyPoint, color, ENEMY_SOUND_PROFILE);
+            case NORMAL -> new NormalEnemy("Normal enemy", body, unitSpawn, rallyPoint, color, ENEMY_SOUND_PROFILE);
         };
         unit.setBehavior(new EnemyRallyBehavior());
         return unit;
+    }
+
+    private BattleSoundProfile getPlayerSoundProfile(int index) {
+        return PLAYER_SOUND_PROFILES[Math.min(index, PLAYER_SOUND_PROFILES.length - 1)];
     }
 
     private Body createBody(Team team, BattleUnitType type, Vector2 spawn) {
