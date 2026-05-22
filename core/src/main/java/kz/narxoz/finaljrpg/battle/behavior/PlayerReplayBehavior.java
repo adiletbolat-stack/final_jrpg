@@ -14,6 +14,6 @@ public class PlayerReplayBehavior implements UnitBehavior {
     @Override
     public void update(BattleSession session, BattleUnit unit, float delta) {
         BattleInput input = session.getInputForPlayer(playerIndex);
-        session.applyPlayerInput(unit, input);
+        session.applyPlayerInput(unit, input, delta);
     }
 }

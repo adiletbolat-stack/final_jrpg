@@ -9,18 +9,21 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Contact;
+import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.physics.box2d.RayCastCallback;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.physics.box2d.WorldManifold;
-import kz.narxoz.finaljrpg.battle.behavior.EnemyRallyBehavior;
 import kz.narxoz.finaljrpg.battle.behavior.PlayerReplayBehavior;
 import kz.narxoz.finaljrpg.battle.event.VictoryEvent;
 import kz.narxoz.finaljrpg.battle.event.VictoryObserver;
 import kz.narxoz.finaljrpg.battle.event.VictorySubject;
+import kz.narxoz.finaljrpg.command.battle.ActivatePlayerSkillCommand;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import static kz.narxoz.finaljrpg.Constants.TERRAIN;
 import static kz.narxoz.finaljrpg.Constants.MAP_HEIGHT;
 import static kz.narxoz.finaljrpg.Constants.MAP_WIDTH;
 import static kz.narxoz.finaljrpg.Constants.PPM;
@@ -28,10 +31,22 @@ import static kz.narxoz.finaljrpg.Constants.PPM;
 public class BattleSession implements VictorySubject {
     private static final int PLAYER_COUNT = 3;
     private static final float PROJECTILE_SPEED = 6f;
+    private static final float TELEPORT_PROJECTILE_SPEED = 12f;
     private static final float PROJECTILE_SPAWN_PADDING = 0.07f;
+    private static final float PLAYER_ONE_CHARGED_SHOT_SPEED = 12f;
+    private static final float PLAYER_ONE_CHARGED_SHOT_DURATION = 4f;
+    private static final float PLAYER_ONE_CHARGED_SHOT_MIN_DAMAGE = 5f;
+    private static final float PLAYER_ONE_CHARGED_SHOT_MAX_DAMAGE = 60f;
     private static final int BASE_SCORE = 10000;
+    private static final BattleUnitType[][] ENEMY_WAVES = {
+        {BattleUnitType.NORMAL, BattleUnitType.HEAVY, BattleUnitType.FLYING},
+        {BattleUnitType.NORMAL, BattleUnitType.NORMAL, BattleUnitType.HEAVY, BattleUnitType.FLYING},
+        {BattleUnitType.HEAVY, BattleUnitType.FLYING, BattleUnitType.NORMAL, BattleUnitType.HEAVY, BattleUnitType.FLYING}
+    };
 
     private final World world;
+    private final BattleUnitFactory factory;
+    private final Vector2 enemySpawn;
     private final BattleTimeline timeline = new BattleTimeline(PLAYER_COUNT);
     private final List<BattleUnit> players = new ArrayList<>();
     private final List<BattleUnit> enemies = new ArrayList<>();
@@ -39,26 +54,26 @@ public class BattleSession implements VictorySubject {
     private final List<VictoryObserver> victoryObservers = new ArrayList<>();
 
     private int activePlayerIndex;
+    private int currentWaveIndex;
     private int frame;
     private float battleTime;
     private boolean victoryNotified;
+    private boolean previousShootPressed;
     private BattleInput activeInput = BattleInput.EMPTY;
     private final Vector2 mouseWorldPosition = new Vector2();
 
     public BattleSession(World world, MapSpawnPoints spawnPoints) {
         this.world = world;
+        this.factory = new BattleUnitFactory(world);
 
-        BattleUnitFactory factory = new BattleUnitFactory(world);
         Vector2 playerSpawn = spawnPoints.getPlayerSpawn();
-        Vector2 enemySpawn = spawnPoints.getEnemySpawn();
+        this.enemySpawn = spawnPoints.getEnemySpawn();
 
         for (int i = 0; i < PLAYER_COUNT; i++) {
             players.add(factory.createPlayer(i, playerSpawn));
         }
 
-        enemies.add(factory.createEnemy(BattleUnitType.NORMAL, 0, enemySpawn, new Vector2(enemySpawn.x - 3f, enemySpawn.y)));
-        enemies.add(factory.createEnemy(BattleUnitType.HEAVY, 1, enemySpawn, new Vector2(enemySpawn.x - 2.4f, enemySpawn.y)));
-        enemies.add(factory.createEnemy(BattleUnitType.FLYING, 2, enemySpawn, new Vector2(enemySpawn.x - 3.6f, enemySpawn.y + 0.8f)));
+        spawnWave(0);
     }
 
     public void update(float delta, OrthographicCamera camera) {
@@ -115,7 +130,7 @@ public class BattleSession implements VictorySubject {
         return timeline.getInput(playerIndex, frame);
     }
 
-    public void applyPlayerInput(BattleUnit unit, BattleInput input) {
+    public void applyPlayerInput(BattleUnit unit, BattleInput input, float delta) {
         if (unit.isDead()) {
             stopHorizontal(unit);
             return;
@@ -143,8 +158,14 @@ public class BattleSession implements VictorySubject {
             unit.playJumpSound();
         }
 
-        if (input.shoot() && unit.canShoot()) {
+        if (isPlayerOne(unit)) {
+            applyPlayerOneShooting(unit, input, delta);
+        } else if (input.shoot() && unit.canShoot()) {
             shootAt(unit, input.aimPoint());
+        }
+
+        if (input.skill()) {
+            new ActivatePlayerSkillCommand(this, unit, input.aimPoint()).execute();
         }
     }
 
@@ -203,6 +224,42 @@ public class BattleSession implements VictorySubject {
     }
 
     public void shootAt(BattleUnit shooter, Vector2 targetPosition) {
+        shootProjectile(shooter, targetPosition, PROJECTILE_SPEED, shooter.getType().getDamage(), null);
+        shooter.resetAttackTimer();
+        shooter.playShootSound();
+    }
+
+    public void shootTeleportProjectile(BattleUnit shooter, Vector2 targetPosition) {
+        shootProjectile(shooter, targetPosition, TELEPORT_PROJECTILE_SPEED, 0f, this::teleportOwnerToProjectile, true);
+        shooter.playShootSound();
+    }
+
+    public void shootChargedShot(BattleUnit shooter, Vector2 targetPosition) {
+        float damage = shooter.getSkillChargeDamage(PLAYER_ONE_CHARGED_SHOT_MIN_DAMAGE, PLAYER_ONE_CHARGED_SHOT_MAX_DAMAGE);
+        shooter.resetSkillCharge();
+        shootProjectile(shooter, targetPosition, PLAYER_ONE_CHARGED_SHOT_SPEED, damage, null);
+        shooter.resetAttackTimer();
+        shooter.playShootSound();
+    }
+
+    private void shootProjectile(
+        BattleUnit shooter,
+        Vector2 targetPosition,
+        float speed,
+        float damage,
+        ProjectileHitEffect hitEffect
+    ) {
+        shootProjectile(shooter, targetPosition, speed, damage, hitEffect, false);
+    }
+
+    private void shootProjectile(
+        BattleUnit shooter,
+        Vector2 targetPosition,
+        float speed,
+        float damage,
+        ProjectileHitEffect hitEffect,
+        boolean collidesWithTerrain
+    ) {
         Vector2 direction = new Vector2(targetPosition).sub(shooter.getPosition());
 
         if (!isFinite(direction)) {
@@ -216,11 +273,9 @@ public class BattleSession implements VictorySubject {
         direction.nor();
         Vector2 spawnPosition = new Vector2(shooter.getPosition())
             .mulAdd(direction, Math.max(shooter.getWidth(), shooter.getHeight()) / 2f + PROJECTILE_SPAWN_PADDING);
-        Vector2 velocity = new Vector2(direction).scl(PROJECTILE_SPEED);
+        Vector2 velocity = new Vector2(direction).scl(speed);
 
-        projectiles.add(new Projectile(shooter.getTeam(), spawnPosition, velocity, shooter.getType().getDamage()));
-        shooter.resetAttackTimer();
-        shooter.playShootSound();
+        projectiles.add(new Projectile(shooter.getTeam(), shooter, spawnPosition, velocity, damage, hitEffect, collidesWithTerrain));
     }
 
     public Vector2 getCameraTarget() {
@@ -266,6 +321,7 @@ public class BattleSession implements VictorySubject {
         frame = 0;
         battleTime = 0f;
         victoryNotified = false;
+        currentWaveIndex = 0;
         projectiles.clear();
 
         for (int i = 0; i < players.size(); i++) {
@@ -274,18 +330,35 @@ public class BattleSession implements VictorySubject {
             player.setBehavior(new PlayerReplayBehavior(i));
         }
 
-        for (BattleUnit enemy : enemies) {
-            enemy.reset();
-            enemy.setBehavior(new EnemyRallyBehavior());
+        clearEnemies();
+        spawnWave(currentWaveIndex);
+    }
+
+    private void applyPlayerOneShooting(BattleUnit unit, BattleInput input, float delta) {
+        if (input.shootHeld()) {
+            unit.chargeSkill(delta, PLAYER_ONE_CHARGED_SHOT_DURATION);
         }
+
+        if (!input.shootReleased() || !unit.canShoot()) {
+            return;
+        }
+
+        shootChargedShot(unit, input.aimPoint());
     }
 
     private BattleInput readCurrentInput() {
+        boolean shootPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
+        boolean shootReleased = previousShootPressed && !shootPressed;
+        previousShootPressed = shootPressed;
+
         return new BattleInput(
             Gdx.input.isKeyPressed(Input.Keys.A),
             Gdx.input.isKeyPressed(Input.Keys.D),
             Gdx.input.isKeyJustPressed(Input.Keys.W),
             Gdx.input.isButtonJustPressed(Input.Buttons.LEFT),
+            shootPressed,
+            shootReleased,
+            Gdx.input.isKeyJustPressed(Input.Keys.F),
             mouseWorldPosition
         );
     }
@@ -303,12 +376,39 @@ public class BattleSession implements VictorySubject {
             }
         }
 
+        if (currentWaveIndex < ENEMY_WAVES.length - 1) {
+            currentWaveIndex++;
+            projectiles.clear();
+            clearEnemies();
+            spawnWave(currentWaveIndex);
+            return;
+        }
+
         victoryNotified = true;
         VictoryEvent event = new VictoryEvent(battleTime, calculateScore());
 
         for (VictoryObserver observer : new ArrayList<>(victoryObservers)) {
             observer.onVictory(event);
         }
+    }
+
+    private void spawnWave(int waveIndex) {
+        BattleUnitType[] wave = ENEMY_WAVES[waveIndex];
+
+        for (int i = 0; i < wave.length; i++) {
+            BattleUnitType type = wave[i];
+            float rallyX = enemySpawn.x - 2.4f - i * 0.55f;
+            float rallyY = enemySpawn.y + (type == BattleUnitType.FLYING ? 0.8f : 0f);
+            enemies.add(factory.createEnemy(type, i, enemySpawn, new Vector2(rallyX, rallyY)));
+        }
+    }
+
+    private void clearEnemies() {
+        for (BattleUnit enemy : enemies) {
+            world.destroyBody(enemy.getBody());
+        }
+
+        enemies.clear();
     }
 
     private int calculateScore() {
@@ -336,12 +436,35 @@ public class BattleSession implements VictorySubject {
                 continue;
             }
 
+            hitTerrain(projectile);
+
+            if (!projectile.isAlive()) {
+                iterator.remove();
+                continue;
+            }
+
             hitOpponents(projectile);
 
             if (!projectile.isAlive() || isOutOfWorld(projectile)) {
                 iterator.remove();
             }
         }
+    }
+
+    private void hitTerrain(Projectile projectile) {
+        if (!projectile.isCollidesWithTerrain()) {
+            return;
+        }
+
+        TerrainRayCastCallback callback = new TerrainRayCastCallback();
+        world.rayCast(callback, projectile.getPreviousPosition(), projectile.getPosition());
+
+        if (!callback.hitTerrain) {
+            return;
+        }
+
+        projectile.getPosition().set(callback.hitPoint);
+        projectile.hit(this, null);
     }
 
     private void hitOpponents(Projectile projectile) {
@@ -358,11 +481,23 @@ public class BattleSession implements VictorySubject {
             boolean insideY = Math.abs(position.y - targetPosition.y) <= target.getHeight() / 2f;
 
             if (insideX && insideY) {
-                target.damage(projectile.getDamage());
-                projectile.destroy();
+                projectile.hit(this, target);
                 return;
             }
         }
+    }
+
+    private void teleportOwnerToProjectile(BattleSession session, Projectile projectile, BattleUnit target) {
+        BattleUnit owner = projectile.getOwner();
+
+        if (owner == null || owner.isDead()) {
+            return;
+        }
+
+        owner.getBody().setTransform(projectile.getPosition(), 0f);
+        owner.getBody().setLinearVelocity(0f, 0f);
+        owner.getBody().setAngularVelocity(0f);
+        owner.getBody().setAwake(true);
     }
 
     private boolean isOutOfWorld(Projectile projectile) {
@@ -407,6 +542,10 @@ public class BattleSession implements VictorySubject {
         return other != null && !other.isDead() && other.getTeam() != unit.getTeam();
     }
 
+    private boolean isPlayerOne(BattleUnit unit) {
+        return !players.isEmpty() && players.get(0) == unit;
+    }
+
     private BattleUnit findUnitByBody(Body body) {
         for (BattleUnit unit : getAllUnits()) {
             if (unit.getBody() == body) {
@@ -445,5 +584,28 @@ public class BattleSession implements VictorySubject {
         shapeRenderer.rect(x, y + unit.getHeight() + 0.1f, unit.getWidth(), 0.025f);
         shapeRenderer.setColor(Color.GREEN);
         shapeRenderer.rect(x, y + unit.getHeight() + 0.1f, unit.getWidth() * (unit.getHealth() / unit.getMaxHealth()), 0.025f);
+
+        if (players.indexOf(unit) == 0) {
+            shapeRenderer.setColor(Color.DARK_GRAY);
+            shapeRenderer.rect(x, y + unit.getHeight() + 0.15f, unit.getWidth(), 0.025f);
+            shapeRenderer.setColor(Color.CYAN);
+            shapeRenderer.rect(x, y + unit.getHeight() + 0.15f, unit.getWidth() * unit.getSkillCharge(), 0.025f);
+        }
+    }
+
+    private static class TerrainRayCastCallback implements RayCastCallback {
+        private final Vector2 hitPoint = new Vector2();
+        private boolean hitTerrain;
+
+        @Override
+        public float reportRayFixture(Fixture fixture, Vector2 point, Vector2 normal, float fraction) {
+            if ((fixture.getFilterData().categoryBits & TERRAIN) == 0) {
+                return -1f;
+            }
+
+            hitTerrain = true;
+            hitPoint.set(point);
+            return fraction;
+        }
     }
 }

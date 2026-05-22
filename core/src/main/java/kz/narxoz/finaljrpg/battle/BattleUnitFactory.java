@@ -11,6 +11,8 @@ import kz.narxoz.finaljrpg.Constants;
 import kz.narxoz.finaljrpg.audio.BattleSoundProfile;
 import kz.narxoz.finaljrpg.battle.behavior.EnemyRallyBehavior;
 import kz.narxoz.finaljrpg.battle.behavior.PlayerReplayBehavior;
+import kz.narxoz.finaljrpg.battle.skill.IndexedPlayerSkillStrategy;
+import kz.narxoz.finaljrpg.battle.skill.PlayerSkillCreationStrategy;
 import kz.narxoz.finaljrpg.battle.unit.FlyingEnemy;
 import kz.narxoz.finaljrpg.battle.unit.HeavyEnemy;
 import kz.narxoz.finaljrpg.battle.unit.NormalEnemy;
@@ -26,9 +28,15 @@ public class BattleUnitFactory {
         new BattleSoundProfile(null, "audio/enemy_shoot.mp3", null);
 
     private final World world;
+    private final PlayerSkillCreationStrategy skillCreationStrategy;
 
     public BattleUnitFactory(World world) {
+        this(world, new IndexedPlayerSkillStrategy());
+    }
+
+    public BattleUnitFactory(World world, PlayerSkillCreationStrategy skillCreationStrategy) {
         this.world = world;
+        this.skillCreationStrategy = skillCreationStrategy;
     }
 
     public BattleUnit createPlayer(int index, Vector2 spawn) {
@@ -39,7 +47,8 @@ public class BattleUnitFactory {
             body,
             unitSpawn,
             new Color(0.25f, 0.65f, 1f, 1f),
-            getPlayerSoundProfile(index)
+            getPlayerSoundProfile(index),
+            skillCreationStrategy.createSkill(index)
         );
         unit.setBehavior(new PlayerReplayBehavior(index));
         return unit;

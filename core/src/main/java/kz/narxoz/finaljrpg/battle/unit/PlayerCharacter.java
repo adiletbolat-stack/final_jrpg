@@ -8,9 +8,10 @@ import kz.narxoz.finaljrpg.battle.BattleUnit;
 import kz.narxoz.finaljrpg.battle.BattleUnitType;
 import kz.narxoz.finaljrpg.battle.Team;
 import kz.narxoz.finaljrpg.battle.movement.PlayerMovement;
+import kz.narxoz.finaljrpg.battle.skill.PlayerSkill;
 
 public class PlayerCharacter extends BattleUnit {
-    public PlayerCharacter(String name, Body body, Vector2 spawn, Color color, BattleSoundProfile soundProfile) {
-        super(name, Team.PLAYER, BattleUnitType.NORMAL, body, spawn, spawn, color, new PlayerMovement(), soundProfile);
+    public PlayerCharacter(String name, Body body, Vector2 spawn, Color color, BattleSoundProfile soundProfile, PlayerSkill skill) {
+        super(name, Team.PLAYER, BattleUnitType.NORMAL, body, spawn, spawn, color, new PlayerMovement(), soundProfile, skill);
     }
 }

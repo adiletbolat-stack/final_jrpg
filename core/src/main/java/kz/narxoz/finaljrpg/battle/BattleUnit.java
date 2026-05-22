@@ -7,12 +7,14 @@ import kz.narxoz.finaljrpg.audio.BattleSoundPlayer;
 import kz.narxoz.finaljrpg.audio.BattleSoundProfile;
 import kz.narxoz.finaljrpg.battle.behavior.UnitBehavior;
 import kz.narxoz.finaljrpg.battle.movement.BattleMovement;
+import kz.narxoz.finaljrpg.battle.skill.PlayerSkill;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 public class BattleUnit {
     private static final float WALK_SOUND_INTERVAL = 0.28f;
+    private static final float FULL_SKILL_CHARGE = 1f;
 
     private final String name;
     private final Team team;
@@ -26,12 +28,14 @@ public class BattleUnit {
     private final float maxHealth;
     private final BattleMovement movement;
     private final BattleSoundProfile soundProfile;
+    private final PlayerSkill skill;
 
     @Setter
     private UnitBehavior behavior;
     private float health;
     private float attackTimer;
     private float walkSoundTimer;
+    private float skillCharge;
 
     public BattleUnit(String name, Team team, BattleUnitType type, Body body, Vector2 spawn, Vector2 rallyPoint, Color color, BattleMovement movement) {
         this(name, team, type, body, spawn, rallyPoint, color, movement, BattleSoundProfile.EMPTY);
@@ -48,6 +52,21 @@ public class BattleUnit {
         BattleMovement movement,
         BattleSoundProfile soundProfile
     ) {
+        this(name, team, type, body, spawn, rallyPoint, color, movement, soundProfile, null);
+    }
+
+    public BattleUnit(
+        String name,
+        Team team,
+        BattleUnitType type,
+        Body body,
+        Vector2 spawn,
+        Vector2 rallyPoint,
+        Color color,
+        BattleMovement movement,
+        BattleSoundProfile soundProfile,
+        PlayerSkill skill
+    ) {
         this.name = name;
         this.team = team;
         this.type = type;
@@ -60,6 +79,7 @@ public class BattleUnit {
         this.maxHealth = type.getMaxHealth();
         this.movement = movement;
         this.soundProfile = soundProfile;
+        this.skill = skill;
         this.health = maxHealth;
     }
 
@@ -68,6 +88,7 @@ public class BattleUnit {
 
         if (isDead()) {
             body.setLinearVelocity(0f, 0f);
+            body.setActive(false);
             return;
         }
 
@@ -83,6 +104,8 @@ public class BattleUnit {
     public void reset() {
         health = maxHealth;
         attackTimer = 0f;
+        skillCharge = 0f;
+        body.setActive(true);
         body.setTransform(spawn, 0f);
         body.setLinearVelocity(0f, 0f);
         body.setAngularVelocity(0f);
@@ -103,6 +126,31 @@ public class BattleUnit {
 
     public void resetAttackTimer() {
         attackTimer = type.getAttackCooldown();
+    }
+
+    public void activateSkill(BattleSession session, Vector2 targetPosition) {
+        if (skill == null || isDead()) {
+            return;
+        }
+
+        skill.activate(session, this, targetPosition);
+    }
+
+    public void chargeSkill(float delta, float chargeDuration) {
+        if (chargeDuration <= 0f) {
+            skillCharge = FULL_SKILL_CHARGE;
+            return;
+        }
+
+        skillCharge = Math.min(FULL_SKILL_CHARGE, skillCharge + delta / chargeDuration);
+    }
+
+    public float getSkillChargeDamage(float minDamage, float maxDamage) {
+        return minDamage + (maxDamage - minDamage) * skillCharge;
+    }
+
+    public void resetSkillCharge() {
+        skillCharge = 0f;
     }
 
     public void playWalkSound() {
