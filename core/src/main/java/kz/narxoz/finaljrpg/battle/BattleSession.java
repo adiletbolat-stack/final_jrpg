@@ -4,6 +4,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -18,10 +20,16 @@ import kz.narxoz.finaljrpg.battle.event.VictoryEvent;
 import kz.narxoz.finaljrpg.battle.event.VictoryObserver;
 import kz.narxoz.finaljrpg.battle.event.VictorySubject;
 import kz.narxoz.finaljrpg.command.battle.ActivatePlayerSkillCommand;
+import kz.narxoz.finaljrpg.battle.render.CharacterAnimationSet;
+import kz.narxoz.finaljrpg.battle.render.CharacterAnimationState;
+import kz.narxoz.finaljrpg.battle.unit.PlayerCharacter;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import static kz.narxoz.finaljrpg.Constants.TERRAIN;
 import static kz.narxoz.finaljrpg.Constants.MAP_HEIGHT;
@@ -55,6 +63,8 @@ public class BattleSession implements VictorySubject {
     private final List<BattleUnit> enemies = new ArrayList<>();
     private final List<Projectile> projectiles = new ArrayList<>();
     private final List<VictoryObserver> victoryObservers = new ArrayList<>();
+    private final Map<BattleUnit, CharacterAnimationState> playerAnimationStates = new IdentityHashMap<>();
+    private final Map<String, CharacterAnimationSet> playerAnimationSets = new HashMap<>();
 
     private int activePlayerIndex;
     private int currentWaveIndex;
@@ -77,6 +87,16 @@ public class BattleSession implements VictorySubject {
         }
 
         spawnWave(0);
+        
+        enemies.add(factory.createEnemy(BattleUnitType.NORMAL, 0, enemySpawn, new Vector2(enemySpawn.x - 3f, enemySpawn.y)));
+        enemies.add(factory.createEnemy(BattleUnitType.HEAVY, 1, enemySpawn, new Vector2(enemySpawn.x - 2.4f, enemySpawn.y)));
+        enemies.add(factory.createEnemy(BattleUnitType.FLYING, 2, enemySpawn, new Vector2(enemySpawn.x - 3.6f, enemySpawn.y + 0.8f)));
+
+        for (BattleUnit player : players) {
+            PlayerCharacter character = (PlayerCharacter) player;
+            playerAnimationStates.put(player, new CharacterAnimationState());
+            playerAnimationSets.computeIfAbsent(character.getSpriteKey(), CharacterAnimationSet::new);
+        }
     }
 
     public void update(float delta, OrthographicCamera camera) {
@@ -101,17 +121,34 @@ public class BattleSession implements VictorySubject {
             enemy.update(this, delta);
         }
 
+        updatePlayerAnimations(delta);
         updateProjectiles(delta);
         battleTime += delta;
         checkVictory();
         frame++;
     }
 
-    public void render(ShapeRenderer shapeRenderer) {
+    public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+
+        for (BattleUnit enemy : enemies) {
+            drawEnemyUnit(shapeRenderer, enemy);
+        }
+
+        shapeRenderer.end();
+
+        batch.begin();
+
+        for (BattleUnit player : players) {
+            drawPlayerSprite(batch, player);
+        }
+
+        batch.end();
+
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
         for (BattleUnit unit : getAllUnits()) {
-            drawUnit(shapeRenderer, unit);
+            drawUnitBars(shapeRenderer, unit);
         }
 
         shapeRenderer.setColor(Color.WHITE);
@@ -159,6 +196,7 @@ public class BattleSession implements VictorySubject {
             Body body = unit.getBody();
             body.applyLinearImpulse(0f, unit.getType().getJumpImpulse(), body.getWorldCenter().x, body.getWorldCenter().y, true);
             unit.playJumpSound();
+            triggerJumpAnimation(unit);
         }
 
         if (isPlayerThree(unit)) {
@@ -383,6 +421,11 @@ public class BattleSession implements VictorySubject {
         }
 
         unit.useFlightFuel(PLAYER_THREE_AIRBORNE_FUEL_USAGE * delta);
+
+        
+        for (CharacterAnimationState state : playerAnimationStates.values()) {
+            state.reset();
+        }
     }
 
     private BattleInput readCurrentInput() {
@@ -578,6 +621,31 @@ public class BattleSession implements VictorySubject {
         return false;
     }
 
+    private void updatePlayerAnimations(float delta) {
+        for (BattleUnit player : players) {
+            PlayerCharacter character = (PlayerCharacter) player;
+            CharacterAnimationState state = playerAnimationStates.get(player);
+            CharacterAnimationSet animationSet = playerAnimationSets.get(character.getSpriteKey());
+            state.update(player, animationSet, delta, isGrounded(player.getBody()));
+        }
+    }
+
+    private void triggerJumpAnimation(BattleUnit unit) {
+        CharacterAnimationState state = playerAnimationStates.get(unit);
+
+        if (state != null) {
+            state.triggerJump();
+        }
+    }
+
+    private void triggerShootAnimation(BattleUnit unit, boolean facingRight) {
+        CharacterAnimationState state = playerAnimationStates.get(unit);
+
+        if (state != null) {
+            state.triggerShoot(facingRight);
+        }
+    }
+
     private boolean isAliveOpponent(BattleUnit unit, Body body) {
         BattleUnit other = findUnitByBody(body);
         return other != null && !other.isDead() && other.getTeam() != unit.getTeam();
@@ -608,7 +676,29 @@ public class BattleSession implements VictorySubject {
         return units;
     }
 
-    private void drawUnit(ShapeRenderer shapeRenderer, BattleUnit unit) {
+    private void drawPlayerSprite(SpriteBatch batch, BattleUnit unit) {
+        if (unit.isDead()) {
+            return;
+        }
+
+        PlayerCharacter character = (PlayerCharacter) unit;
+        CharacterAnimationState state = playerAnimationStates.get(unit);
+        CharacterAnimationSet animationSet = playerAnimationSets.get(character.getSpriteKey());
+        TextureRegion frame = animationSet.getFrame(state.getMode(), state.getStateTime());
+        Vector2 position = unit.getPosition();
+        float drawWidth = frame.getRegionWidth() / PPM;
+        float drawHeight = frame.getRegionHeight() / PPM;
+        float x = position.x - drawWidth / 2f;
+        float y = position.y - drawHeight / 2f;
+
+        if (state.isFacingRight()) {
+            batch.draw(frame, x, y, drawWidth, drawHeight);
+        } else {
+            batch.draw(frame, x + drawWidth, y, -drawWidth, drawHeight);
+        }
+    }
+
+    private void drawEnemyUnit(ShapeRenderer shapeRenderer, BattleUnit unit) {
         if (unit.isDead()) {
             return;
         }
@@ -619,6 +709,16 @@ public class BattleSession implements VictorySubject {
 
         shapeRenderer.setColor(unit.getColor());
         shapeRenderer.rect(x, y, unit.getWidth(), unit.getHeight());
+    }
+
+    private void drawUnitBars(ShapeRenderer shapeRenderer, BattleUnit unit) {
+        if (unit.isDead()) {
+            return;
+        }
+
+        Vector2 position = unit.getPosition();
+        float x = position.x - unit.getWidth() / 2f;
+        float y = position.y - unit.getHeight() / 2f;
 
         if (players.indexOf(unit) == activePlayerIndex) {
             shapeRenderer.setColor(Color.WHITE);
@@ -665,6 +765,16 @@ public class BattleSession implements VictorySubject {
             hitTerrain = true;
             hitPoint.set(point);
             return fraction;
+        }
+    }
+
+    private boolean isFacingRightFromAim(Vector2 direction){
+        return direction.x >= 0f;
+    }
+
+    public void dispose() {
+        for (CharacterAnimationSet animationSet : playerAnimationSets.values()) {
+            animationSet.dispose();
         }
     }
 }

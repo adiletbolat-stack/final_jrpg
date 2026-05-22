@@ -9,9 +9,15 @@ import kz.narxoz.finaljrpg.battle.BattleUnitType;
 import kz.narxoz.finaljrpg.battle.Team;
 import kz.narxoz.finaljrpg.battle.movement.PlayerMovement;
 import kz.narxoz.finaljrpg.battle.skill.PlayerSkill;
+import lombok.Getter;
 
+@Getter
 public class PlayerCharacter extends BattleUnit {
-    public PlayerCharacter(String name, Body body, Vector2 spawn, Color color, BattleSoundProfile soundProfile, PlayerSkill skill) {
+    private final String spriteKey;
+    public PlayerCharacter(String name, Body body, Vector2 spawn, Color color, BattleSoundProfile soundProfile, PlayerSkill skill,String spriteKey) {
         super(name, Team.PLAYER, BattleUnitType.NORMAL, body, spawn, spawn, color, new PlayerMovement(), soundProfile, skill);
+        this.spriteKey = spriteKey;
     }
+
+
 }

@@ -26,6 +26,7 @@ public class BattleUnitFactory {
     };
     private static final BattleSoundProfile ENEMY_SOUND_PROFILE =
         new BattleSoundProfile(null, "audio/enemy_shoot.mp3", null);
+    private static final String[] PLAYER_SPRITES = {"railgun", "shotgun", "gunner"};
 
     private final World world;
     private final PlayerSkillCreationStrategy skillCreationStrategy;
@@ -42,14 +43,17 @@ public class BattleUnitFactory {
     public BattleUnit createPlayer(int index, Vector2 spawn) {
         Vector2 unitSpawn = new Vector2(spawn.x + index * 0.35f, spawn.y);
         Body body = createBody(Team.PLAYER, BattleUnitType.NORMAL, unitSpawn);
+         String spriteKey = PLAYER_SPRITES[index % PLAYER_SPRITES.length];
         BattleUnit unit = new PlayerCharacter(
             "Player " + (index + 1),
             body,
             unitSpawn,
             new Color(0.25f, 0.65f, 1f, 1f),
             getPlayerSoundProfile(index),
-            skillCreationStrategy.createSkill(index)
+            skillCreationStrategy.createSkill(index),
+            spriteKey
         );
+       
         unit.setBehavior(new PlayerReplayBehavior(index));
         return unit;
     }
