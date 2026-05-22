@@ -4,8 +4,8 @@ import java.util.Map;
 
 public class SpriteScales {
     public static final Map<String, ObjectScale> SCALES = Map.of(
-        "railgun", new ObjectScale(3.0f, 0f, 0f),
-        "heavy", new ObjectScale(1.5f, 0f, 0f)
+        "railgun", new ObjectScale(3.5f, 0f, 0.5f),
+        "heavy", new ObjectScale(2.0f, 0f, 0f)
     );
 
     public static ObjectScale getScale(String spriteKey) {

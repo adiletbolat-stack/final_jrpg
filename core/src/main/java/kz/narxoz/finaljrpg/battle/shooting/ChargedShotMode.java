@@ -5,7 +5,7 @@ import kz.narxoz.finaljrpg.battle.BattleSession;
 import kz.narxoz.finaljrpg.battle.BattleUnit;
 
 public class ChargedShotMode implements ShootingMode{
-    private static final float CHARGED_SHOT_SPEED = 8f;
+    private static final float CHARGED_SHOT_SPEED = 6f;
     private static final float CHARGE_DURATION = 4f;
     private static final float MIN_DAMAGE = 5f;
     private static final float MAX_DAMAGE = 100f;

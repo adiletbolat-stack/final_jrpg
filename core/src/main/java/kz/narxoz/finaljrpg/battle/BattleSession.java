@@ -41,7 +41,7 @@ import static kz.narxoz.finaljrpg.Constants.PPM;
 
 public class BattleSession implements VictorySubject {
     private static final int PLAYER_COUNT = 3;
-    private static final float PROJECTILE_SPEED = 4f;
+    private static final float PROJECTILE_SPEED = 3f;
     private static final float PROJECTILE_DRAW_SIZE = 8f / PPM;
     private static final float TELEPORT_PROJECTILE_SPEED = 12f;
     private static final float PROJECTILE_SPAWN_PADDING = 0.05f;
@@ -761,6 +761,12 @@ public class BattleSession implements VictorySubject {
             batch.draw(frame, x + drawWidth, y, -drawWidth, drawHeight);
         }
     }
+    private ObjectScale getScale(Projectile projectile){
+        return projectile.getOwner().getScale();
+    }
+    private ObjectScale getScale(BattleUnit unit){
+        return unit.getScale();
+    }
 
     private void drawProjectileSprite(SpriteBatch batch, Projectile projectile) {
         if (!projectile.isAlive() || projectile.getSprite() == null) {
@@ -779,8 +785,8 @@ public class BattleSession implements VictorySubject {
             y,
             PROJECTILE_DRAW_SIZE / 2f,
             PROJECTILE_DRAW_SIZE / 2f,
-            PROJECTILE_DRAW_SIZE * projectile.getOwner().getScale().spriteScale(),
-            PROJECTILE_DRAW_SIZE * projectile.getOwner().getScale().spriteScale(),
+            PROJECTILE_DRAW_SIZE * getScale(projectile).spriteScale(),
+            PROJECTILE_DRAW_SIZE * getScale(projectile).spriteScale(),
             1f,
             1f,
             angle

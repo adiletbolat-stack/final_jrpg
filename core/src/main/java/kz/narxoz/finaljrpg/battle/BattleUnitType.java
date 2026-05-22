@@ -6,9 +6,9 @@ import static kz.narxoz.finaljrpg.Constants.PPM;
 
 @Getter
 public enum BattleUnitType {
-    NORMAL(16f / PPM, 32f / PPM, 2.5f, 0.2f, 100f, 1.5f, 18f),
-    HEAVY(32f / PPM, 32f / PPM, 2.2f, 0.2f, 220f, 2.35f, 32f),
-    FLYING(16f / PPM, 16f / PPM, 3.2f, 0f, 70f, 0.7f, 14f);
+    NORMAL(16f / PPM, 32f / PPM, 2.4f, 0.2f, 100f, 1.5f, 18f),
+    HEAVY(32f / PPM, 32f / PPM, 1.8f, 0.2f, 220f, 2.35f, 32f),
+    FLYING(16f / PPM, 16f / PPM, 3.0f, 0f, 70f, 0.7f, 10f);
 
     private final float width;
     private final float height;
