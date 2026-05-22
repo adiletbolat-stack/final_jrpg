@@ -42,6 +42,5 @@ public class WallCollisionHandler extends AbstractCollisionHandler {
 
         body.createFixture(fixtureDef);
         shape.dispose();
-        System.out.println(1);
     }
 }
