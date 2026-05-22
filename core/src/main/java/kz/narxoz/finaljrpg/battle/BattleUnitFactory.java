@@ -15,6 +15,8 @@ import kz.narxoz.finaljrpg.battle.unit.NormalEnemy;
 import kz.narxoz.finaljrpg.battle.unit.PlayerCharacter;
 
 public class BattleUnitFactory {
+    private static final String[] PLAYER_SPRITES = {"gunner", "shotgun", "railgun"};
+
     private final World world;
 
     public BattleUnitFactory(World world) {
@@ -24,7 +26,8 @@ public class BattleUnitFactory {
     public BattleUnit createPlayer(int index, Vector2 spawn) {
         Vector2 unitSpawn = new Vector2(spawn.x + index * 0.35f, spawn.y);
         Body body = createBody(Team.PLAYER, BattleUnitType.NORMAL, unitSpawn);
-        BattleUnit unit = new PlayerCharacter("Player " + (index + 1), body, unitSpawn, new Color(0.25f, 0.65f, 1f, 1f));
+        String spriteKey = PLAYER_SPRITES[index % PLAYER_SPRITES.length];
+        BattleUnit unit = new PlayerCharacter("Player " + (index + 1), body, unitSpawn, new Color(0.25f, 0.65f, 1f, 1f), spriteKey);
         unit.setBehavior(new PlayerReplayBehavior(index));
         return unit;
     }

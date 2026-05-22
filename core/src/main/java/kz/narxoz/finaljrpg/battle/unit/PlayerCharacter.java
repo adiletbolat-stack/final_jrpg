@@ -7,9 +7,14 @@ import kz.narxoz.finaljrpg.battle.BattleUnit;
 import kz.narxoz.finaljrpg.battle.BattleUnitType;
 import kz.narxoz.finaljrpg.battle.Team;
 import kz.narxoz.finaljrpg.battle.movement.PlayerMovement;
+import lombok.Getter;
 
+@Getter
 public class PlayerCharacter extends BattleUnit {
-    public PlayerCharacter(String name, Body body, Vector2 spawn, Color color) {
+    private final String spriteKey;
+
+    public PlayerCharacter(String name, Body body, Vector2 spawn, Color color, String spriteKey) {
         super(name, Team.PLAYER, BattleUnitType.NORMAL, body, spawn, spawn, color, new PlayerMovement());
+        this.spriteKey = spriteKey;
     }
 }
