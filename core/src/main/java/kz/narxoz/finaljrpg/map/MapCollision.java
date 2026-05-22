@@ -7,6 +7,7 @@ import com.badlogic.gdx.physics.box2d.World;
 import kz.narxoz.finaljrpg.map.collision.CollisionHandler;
 import kz.narxoz.finaljrpg.map.collision.PolygonCollisionHandler;
 import kz.narxoz.finaljrpg.map.collision.RectangleCollisionHandler;
+import kz.narxoz.finaljrpg.map.collision.WallCollisionHandler;
 
 import java.util.Objects;
 
@@ -29,7 +30,10 @@ public class MapCollision {
 
     private CollisionHandler buildCollisionHandler() {
         CollisionHandler rectangleHandler = new RectangleCollisionHandler();
-        rectangleHandler.setNext(new PolygonCollisionHandler());
+        CollisionHandler wallHandler = new WallCollisionHandler();
+        CollisionHandler polyHandler = new PolygonCollisionHandler();
+        wallHandler.setNext(polyHandler);
+        rectangleHandler.setNext(wallHandler);
 
         return rectangleHandler;
     }

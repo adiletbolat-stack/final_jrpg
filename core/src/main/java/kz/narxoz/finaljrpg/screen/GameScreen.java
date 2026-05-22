@@ -184,8 +184,8 @@ public class GameScreen implements Screen {
             Fixture fixtureB = contact.getFixtureB();
             boolean playerA = isCategory(fixtureA, PLAYER);
             boolean playerB = isCategory(fixtureB, PLAYER);
-            boolean terrainA = isCategory(fixtureA, TERRAIN);
-            boolean terrainB = isCategory(fixtureB, TERRAIN);
+            boolean terrainA = isCategory(fixtureA, PLATFORM);
+            boolean terrainB = isCategory(fixtureB, PLATFORM);
 
             if (playerA && terrainB && contact.getWorldManifold().getNormal().y > 0.5f) {
                 contact.setEnabled(false);

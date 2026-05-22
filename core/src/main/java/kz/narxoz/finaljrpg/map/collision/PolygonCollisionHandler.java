@@ -9,10 +9,7 @@ import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 
-import static kz.narxoz.finaljrpg.Constants.ENEMY;
-import static kz.narxoz.finaljrpg.Constants.PLAYER;
-import static kz.narxoz.finaljrpg.Constants.PPM;
-import static kz.narxoz.finaljrpg.Constants.TERRAIN;
+import static kz.narxoz.finaljrpg.Constants.*;
 
 public class PolygonCollisionHandler extends AbstractCollisionHandler {
 
@@ -42,7 +39,7 @@ public class PolygonCollisionHandler extends AbstractCollisionHandler {
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = shape;
         fixtureDef.friction = 0f;
-        fixtureDef.filter.categoryBits = TERRAIN;
+        fixtureDef.filter.categoryBits = PLATFORM;
         fixtureDef.filter.maskBits = PLAYER | ENEMY;
 
         body.createFixture(fixtureDef);
