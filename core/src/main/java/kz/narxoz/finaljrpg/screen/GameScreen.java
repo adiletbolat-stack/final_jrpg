@@ -42,6 +42,7 @@ public class GameScreen implements Screen {
 
     private BattleSession battleSession;
     private boolean initialized;
+    private boolean debugBox2d = false;
 
     @Override
     public void show() {
@@ -95,9 +96,16 @@ public class GameScreen implements Screen {
 
         mapRenderer.render();
 
-        battleSession.render(shapeRenderer);
+        battleSession.render(batch, shapeRenderer);
 
-        debugRenderer.render(world, camera.combined);
+        //debug option to see hitboxes on F3
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F3)) {
+            debugBox2d = !debugBox2d;
+        }
+        if (debugBox2d) {
+            debugRenderer.render(world, camera.combined);
+        }
+
         renderHud();
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
@@ -237,6 +245,7 @@ public class GameScreen implements Screen {
         shapeRenderer.dispose();
         hudFont.dispose();
         background.dispose();
+        battleSession.dispose();
         mapRenderer.dispose();
         map.dispose();
         initialized = false;
