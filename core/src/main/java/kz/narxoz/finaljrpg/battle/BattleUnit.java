@@ -11,6 +11,8 @@ import kz.narxoz.finaljrpg.battle.skill.PlayerSkill;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Objects;
+
 @Getter
 public class BattleUnit {
     private static final float WALK_SOUND_INTERVAL = 0.28f;
@@ -29,6 +31,8 @@ public class BattleUnit {
     private final BattleMovement movement;
     private final BattleSoundProfile soundProfile;
     private final PlayerSkill skill;
+    private String spriteKey;
+    private ObjectScale scale;
 
     @Setter
     private UnitBehavior behavior;
@@ -42,50 +46,27 @@ public class BattleUnit {
     private float flightFuel;
     private float maxFlightFuel;
 
-    public BattleUnit(String name, Team team, BattleUnitType type, Body body, Vector2 spawn, Vector2 rallyPoint, Color color, BattleMovement movement) {
-        this(name, team, type, body, spawn, rallyPoint, color, movement, BattleSoundProfile.EMPTY);
-    }
-
-    public BattleUnit(
-        String name,
-        Team team,
-        BattleUnitType type,
-        Body body,
-        Vector2 spawn,
-        Vector2 rallyPoint,
-        Color color,
-        BattleMovement movement,
-        BattleSoundProfile soundProfile
-    ) {
-        this(name, team, type, body, spawn, rallyPoint, color, movement, soundProfile, null);
-    }
-
-    public BattleUnit(
-        String name,
-        Team team,
-        BattleUnitType type,
-        Body body,
-        Vector2 spawn,
-        Vector2 rallyPoint,
-        Color color,
-        BattleMovement movement,
-        BattleSoundProfile soundProfile,
-        PlayerSkill skill
-    ) {
-        this.name = name;
-        this.team = team;
-        this.type = type;
-        this.body = body;
-        this.spawn = new Vector2(spawn);
-        this.rallyPoint = new Vector2(rallyPoint);
-        this.color = new Color(color);
+    protected BattleUnit(Builder builder) {
+        this.name = Objects.requireNonNull(builder.name, "name");
+        this.team = Objects.requireNonNull(builder.team, "team");
+        this.type = Objects.requireNonNull(builder.type, "type");
+        this.body = Objects.requireNonNull(builder.body, "body");
+        this.spawn = new Vector2(Objects.requireNonNull(builder.spawn, "spawn"));
+        this.rallyPoint = new Vector2(builder.rallyPoint == null ? builder.spawn : builder.rallyPoint);
+        this.color = new Color(Objects.requireNonNull(builder.color, "color"));
         this.width = type.getWidth();
         this.height = type.getHeight();
         this.maxHealth = type.getMaxHealth();
-        this.movement = movement;
-        this.soundProfile = soundProfile;
-        this.skill = skill;
+        this.movement = Objects.requireNonNull(builder.movement, "movement");
+        this.soundProfile = builder.soundProfile == null ? BattleSoundProfile.EMPTY : builder.soundProfile;
+        this.skill = builder.skill;
+        this.spriteKey = builder.spriteKey;
+        this.scale = builder.scale == null ? SpriteScales.defaultScale(spriteKey) : builder.scale;
         this.health = maxHealth;
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     public void update(BattleSession session, float delta) {
@@ -220,5 +201,80 @@ public class BattleUnit {
 
     public Vector2 getPosition() {
         return body.getPosition();
+    }
+
+    public static class Builder {
+        private String name;
+        private Team team;
+        private BattleUnitType type;
+        private Body body;
+        private Vector2 spawn;
+        private Vector2 rallyPoint;
+        private Color color;
+        private BattleMovement movement;
+        private BattleSoundProfile soundProfile = BattleSoundProfile.EMPTY;
+        private PlayerSkill skill;
+        private String spriteKey;
+        private ObjectScale scale;
+
+        public Builder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder team(Team team) {
+            this.team = team;
+            return this;
+        }
+
+        public Builder type(BattleUnitType type) {
+            this.type = type;
+            return this;
+        }
+
+        public Builder body(Body body) {
+            this.body = body;
+            return this;
+        }
+
+        public Builder spawn(Vector2 spawn) {
+            this.spawn = spawn;
+            return this;
+        }
+
+        public Builder rallyPoint(Vector2 rallyPoint) {
+            this.rallyPoint = rallyPoint;
+            return this;
+        }
+
+        public Builder color(Color color) {
+            this.color = color;
+            return this;
+        }
+
+        public Builder movement(BattleMovement movement) {
+            this.movement = movement;
+            return this;
+        }
+
+        public Builder soundProfile(BattleSoundProfile soundProfile) {
+            this.soundProfile = soundProfile;
+            return this;
+        }
+
+        public Builder skill(PlayerSkill skill) {
+            this.skill = skill;
+            return this;
+        }
+
+        public Builder spriteKey(String spriteKey) {
+            this.spriteKey = spriteKey;
+            return this;
+        }
+
+        public Builder scale(ObjectScale scale) {
+            this.scale = scale;
+            return this;
+        }
     }
 }
