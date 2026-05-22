@@ -6,18 +6,26 @@ import com.badlogic.gdx.physics.box2d.Body;
 import kz.narxoz.finaljrpg.audio.BattleSoundProfile;
 import kz.narxoz.finaljrpg.battle.BattleUnit;
 import kz.narxoz.finaljrpg.battle.BattleUnitType;
+import kz.narxoz.finaljrpg.battle.ObjectScale;
 import kz.narxoz.finaljrpg.battle.Team;
 import kz.narxoz.finaljrpg.battle.movement.PlayerMovement;
 import kz.narxoz.finaljrpg.battle.skill.PlayerSkill;
-import lombok.Getter;
 
-@Getter
 public class PlayerCharacter extends BattleUnit {
-    private final String spriteKey;
-    public PlayerCharacter(String name, Body body, Vector2 spawn, Color color, BattleSoundProfile soundProfile, PlayerSkill skill,String spriteKey) {
-        super(name, Team.PLAYER, BattleUnitType.NORMAL, body, spawn, spawn, color, new PlayerMovement(), soundProfile, skill);
-        this.spriteKey = spriteKey;
+    public PlayerCharacter(String name, Body body, Vector2 spawn, Color color, BattleSoundProfile soundProfile, PlayerSkill skill, String spriteKey, ObjectScale scale) {
+        super(BattleUnit.builder()
+            .name(name)
+            .team(Team.PLAYER)
+            .type(BattleUnitType.NORMAL)
+            .body(body)
+            .spawn(spawn)
+            .rallyPoint(spawn)
+            .color(color)
+            .movement(new PlayerMovement())
+            .soundProfile(soundProfile)
+            .skill(skill)
+            .spriteKey(spriteKey)
+            .scale(scale)
+        );
     }
-
-
 }
