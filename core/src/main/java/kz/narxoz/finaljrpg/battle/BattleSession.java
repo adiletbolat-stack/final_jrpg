@@ -19,10 +19,13 @@ import kz.narxoz.finaljrpg.battle.behavior.PlayerReplayBehavior;
 import kz.narxoz.finaljrpg.battle.event.VictoryEvent;
 import kz.narxoz.finaljrpg.battle.event.VictoryObserver;
 import kz.narxoz.finaljrpg.battle.event.VictorySubject;
-import kz.narxoz.finaljrpg.command.battle.ActivatePlayerSkillCommand;
 import kz.narxoz.finaljrpg.battle.render.CharacterAnimationSet;
 import kz.narxoz.finaljrpg.battle.render.CharacterAnimationState;
+import kz.narxoz.finaljrpg.battle.render.EnemyAnimationSet;
+import kz.narxoz.finaljrpg.battle.render.EnemyAnimationState;
+import kz.narxoz.finaljrpg.battle.render.ProjectileSpriteFlyweightFactory;
 import kz.narxoz.finaljrpg.battle.unit.PlayerCharacter;
+import kz.narxoz.finaljrpg.command.battle.ActivatePlayerSkillCommand;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,10 +41,11 @@ import static kz.narxoz.finaljrpg.Constants.PPM;
 
 public class BattleSession implements VictorySubject {
     private static final int PLAYER_COUNT = 3;
-    private static final float PROJECTILE_SPEED = 6f;
+    private static final float PROJECTILE_SPEED = 4f;
+    private static final float PROJECTILE_DRAW_SIZE = 8f / PPM;
     private static final float TELEPORT_PROJECTILE_SPEED = 12f;
     private static final float PROJECTILE_SPAWN_PADDING = 0.07f;
-    private static final float PLAYER_ONE_CHARGED_SHOT_SPEED = 12f;
+    private static final float PLAYER_ONE_CHARGED_SHOT_SPEED = 8f;
     private static final float PLAYER_ONE_CHARGED_SHOT_DURATION = 4f;
     private static final float PLAYER_ONE_CHARGED_SHOT_MIN_DAMAGE = 5f;
     private static final float PLAYER_ONE_CHARGED_SHOT_MAX_DAMAGE = 60f;
@@ -65,6 +69,9 @@ public class BattleSession implements VictorySubject {
     private final List<VictoryObserver> victoryObservers = new ArrayList<>();
     private final Map<BattleUnit, CharacterAnimationState> playerAnimationStates = new IdentityHashMap<>();
     private final Map<String, CharacterAnimationSet> playerAnimationSets = new HashMap<>();
+    private final Map<BattleUnit, EnemyAnimationState> enemyAnimationStates = new IdentityHashMap<>();
+    private final Map<String, EnemyAnimationSet> enemyAnimationSets = new HashMap<>();
+    private final ProjectileSpriteFlyweightFactory projectileSpriteFactory = new ProjectileSpriteFlyweightFactory();
 
     private int activePlayerIndex;
     private int currentWaveIndex;
@@ -87,10 +94,6 @@ public class BattleSession implements VictorySubject {
         }
 
         spawnWave(0);
-        
-        enemies.add(factory.createEnemy(BattleUnitType.NORMAL, 0, enemySpawn, new Vector2(enemySpawn.x - 3f, enemySpawn.y)));
-        enemies.add(factory.createEnemy(BattleUnitType.HEAVY, 1, enemySpawn, new Vector2(enemySpawn.x - 2.4f, enemySpawn.y)));
-        enemies.add(factory.createEnemy(BattleUnitType.FLYING, 2, enemySpawn, new Vector2(enemySpawn.x - 3.6f, enemySpawn.y + 0.8f)));
 
         for (BattleUnit player : players) {
             PlayerCharacter character = (PlayerCharacter) player;
@@ -122,6 +125,7 @@ public class BattleSession implements VictorySubject {
         }
 
         updatePlayerAnimations(delta);
+        updateEnemyAnimations(delta);
         updateProjectiles(delta);
         battleTime += delta;
         checkVictory();
@@ -129,18 +133,18 @@ public class BattleSession implements VictorySubject {
     }
 
     public void render(SpriteBatch batch, ShapeRenderer shapeRenderer) {
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        batch.begin();
 
         for (BattleUnit enemy : enemies) {
-            drawEnemyUnit(shapeRenderer, enemy);
+            drawEnemySprite(batch, enemy);
         }
-
-        shapeRenderer.end();
-
-        batch.begin();
 
         for (BattleUnit player : players) {
             drawPlayerSprite(batch, player);
+        }
+
+        for (Projectile projectile : projectiles) {
+            drawProjectileSprite(batch, projectile);
         }
 
         batch.end();
@@ -149,13 +153,6 @@ public class BattleSession implements VictorySubject {
 
         for (BattleUnit unit : getAllUnits()) {
             drawUnitBars(shapeRenderer, unit);
-        }
-
-        shapeRenderer.setColor(Color.WHITE);
-        for (Projectile projectile : projectiles) {
-            if (projectile.isAlive()) {
-                shapeRenderer.circle(projectile.getPosition().x, projectile.getPosition().y, 0.04f, 10);
-            }
         }
 
         shapeRenderer.end();
@@ -320,7 +317,17 @@ public class BattleSession implements VictorySubject {
             .mulAdd(direction, Math.max(shooter.getWidth(), shooter.getHeight()) / 2f + PROJECTILE_SPAWN_PADDING);
         Vector2 velocity = new Vector2(direction).scl(speed);
 
-        projectiles.add(new Projectile(shooter.getTeam(), shooter, spawnPosition, velocity, damage, hitEffect, collidesWithTerrain));
+        projectiles.add(new Projectile(
+            shooter.getTeam(),
+            shooter,
+            spawnPosition,
+            velocity,
+            damage,
+            hitEffect,
+            collidesWithTerrain,
+            projectileSpriteFactory.getForShooter(shooter)
+        ));
+        triggerShootAnimation(shooter, isFacingRightFromAim(direction));
     }
 
     public Vector2 getCameraTarget() {
@@ -385,6 +392,10 @@ public class BattleSession implements VictorySubject {
 
         clearEnemies();
         spawnWave(currentWaveIndex);
+
+        for (CharacterAnimationState state : playerAnimationStates.values()) {
+            state.reset();
+        }
     }
 
     private void applyPlayerOneShooting(BattleUnit unit, BattleInput input, float delta) {
@@ -421,11 +432,6 @@ public class BattleSession implements VictorySubject {
         }
 
         unit.useFlightFuel(PLAYER_THREE_AIRBORNE_FUEL_USAGE * delta);
-
-        
-        for (CharacterAnimationState state : playerAnimationStates.values()) {
-            state.reset();
-        }
     }
 
     private BattleInput readCurrentInput() {
@@ -483,12 +489,15 @@ public class BattleSession implements VictorySubject {
             BattleUnitType type = wave[i];
             float rallyX = enemySpawn.x - 2.4f - i * 0.55f;
             float rallyY = enemySpawn.y + (type == BattleUnitType.FLYING ? 0.8f : 0f);
-            enemies.add(factory.createEnemy(type, i, enemySpawn, new Vector2(rallyX, rallyY)));
+            BattleUnit enemy = factory.createEnemy(type, i, enemySpawn, new Vector2(rallyX, rallyY));
+            enemies.add(enemy);
+            registerEnemyAnimation(enemy);
         }
     }
 
     private void clearEnemies() {
         for (BattleUnit enemy : enemies) {
+            enemyAnimationStates.remove(enemy);
             world.destroyBody(enemy.getBody());
         }
 
@@ -630,6 +639,17 @@ public class BattleSession implements VictorySubject {
         }
     }
 
+    private void updateEnemyAnimations(float delta) {
+        for (BattleUnit enemy : enemies) {
+            EnemyAnimationState state = enemyAnimationStates.get(enemy);
+            EnemyAnimationSet animationSet = enemyAnimationSets.get(getEnemySpriteKey(enemy));
+
+            if (state != null && animationSet != null) {
+                state.update(enemy, animationSet, delta);
+            }
+        }
+    }
+
     private void triggerJumpAnimation(BattleUnit unit) {
         CharacterAnimationState state = playerAnimationStates.get(unit);
 
@@ -643,7 +663,20 @@ public class BattleSession implements VictorySubject {
 
         if (state != null) {
             state.triggerShoot(facingRight);
+            return;
         }
+
+        EnemyAnimationState enemyState = enemyAnimationStates.get(unit);
+
+        if (enemyState != null) {
+            enemyState.triggerShoot(facingRight);
+        }
+    }
+
+    private void registerEnemyAnimation(BattleUnit enemy) {
+        String spriteKey = getEnemySpriteKey(enemy);
+        enemyAnimationStates.put(enemy, new EnemyAnimationState());
+        enemyAnimationSets.computeIfAbsent(spriteKey, EnemyAnimationSet::new);
     }
 
     private boolean isAliveOpponent(BattleUnit unit, Body body) {
@@ -657,6 +690,14 @@ public class BattleSession implements VictorySubject {
 
     private boolean isPlayerThree(BattleUnit unit) {
         return players.size() > 2 && players.get(2) == unit;
+    }
+
+    private String getEnemySpriteKey(BattleUnit unit) {
+        return switch (unit.getType()) {
+            case HEAVY -> "heavy";
+            case FLYING -> "flying";
+            case NORMAL -> "basic";
+        };
     }
 
     private BattleUnit findUnitByBody(Body body) {
@@ -698,17 +739,50 @@ public class BattleSession implements VictorySubject {
         }
     }
 
-    private void drawEnemyUnit(ShapeRenderer shapeRenderer, BattleUnit unit) {
+    private void drawEnemySprite(SpriteBatch batch, BattleUnit unit) {
         if (unit.isDead()) {
             return;
         }
 
+        EnemyAnimationState state = enemyAnimationStates.get(unit);
+        EnemyAnimationSet animationSet = enemyAnimationSets.get(getEnemySpriteKey(unit));
+        TextureRegion frame = animationSet.getFrame(state.getMode(), state.getStateTime());
         Vector2 position = unit.getPosition();
-        float x = position.x - unit.getWidth() / 2f;
-        float y = position.y - unit.getHeight() / 2f;
+        float drawWidth = frame.getRegionWidth() / PPM;
+        float drawHeight = frame.getRegionHeight() / PPM;
+        float x = position.x - drawWidth / 2f;
+        float y = position.y - drawHeight / 2f;
 
-        shapeRenderer.setColor(unit.getColor());
-        shapeRenderer.rect(x, y, unit.getWidth(), unit.getHeight());
+        if (state.isFacingRight()) {
+            batch.draw(frame, x, y, drawWidth, drawHeight);
+        } else {
+            batch.draw(frame, x + drawWidth, y, -drawWidth, drawHeight);
+        }
+    }
+
+    private void drawProjectileSprite(SpriteBatch batch, Projectile projectile) {
+        if (!projectile.isAlive() || projectile.getSprite() == null) {
+            return;
+        }
+
+        TextureRegion frame = projectile.getSprite().getRegion();
+        Vector2 position = projectile.getPosition();
+        float x = position.x - PROJECTILE_DRAW_SIZE / 2f;
+        float y = position.y - PROJECTILE_DRAW_SIZE / 2f;
+        float angle = projectile.getVelocity().angleDeg();
+
+        batch.draw(
+            frame,
+            x,
+            y,
+            PROJECTILE_DRAW_SIZE / 2f,
+            PROJECTILE_DRAW_SIZE / 2f,
+            PROJECTILE_DRAW_SIZE * projectile.getOwner().getScale().spriteScale(),
+            PROJECTILE_DRAW_SIZE * projectile.getOwner().getScale().spriteScale(),
+            1f,
+            1f,
+            angle
+        );
     }
 
     private void drawUnitBars(ShapeRenderer shapeRenderer, BattleUnit unit) {
@@ -776,5 +850,11 @@ public class BattleSession implements VictorySubject {
         for (CharacterAnimationSet animationSet : playerAnimationSets.values()) {
             animationSet.dispose();
         }
+
+        for (EnemyAnimationSet animationSet : enemyAnimationSets.values()) {
+            animationSet.dispose();
+        }
+
+        projectileSpriteFactory.dispose();
     }
 }
