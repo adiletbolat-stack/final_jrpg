@@ -5,8 +5,10 @@ import kz.narxoz.finaljrpg.battle.BattleSession;
 import kz.narxoz.finaljrpg.battle.BattleUnit;
 
 public class PlayerThreeSkill implements PlayerSkill {
+    private static final float MAX_FLIGHT_FUEL = 20f;
+
     @Override
     public void activate(BattleSession session, BattleUnit player, Vector2 targetPosition) {
-        // Unique Player 3 skill will be implemented here.
+        session.activatePlayerThreeHighJump(player, MAX_FLIGHT_FUEL);
     }
 }

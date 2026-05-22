@@ -36,6 +36,11 @@ public class BattleUnit {
     private float attackTimer;
     private float walkSoundTimer;
     private float skillCharge;
+    private float skillCooldownTimer;
+    private float shieldHealth;
+    private float maxShieldHealth;
+    private float flightFuel;
+    private float maxFlightFuel;
 
     public BattleUnit(String name, Team team, BattleUnitType type, Body body, Vector2 spawn, Vector2 rallyPoint, Color color, BattleMovement movement) {
         this(name, team, type, body, spawn, rallyPoint, color, movement, BattleSoundProfile.EMPTY);
@@ -95,6 +100,7 @@ public class BattleUnit {
         body.setActive(true);
         body.setAwake(true);
         attackTimer = Math.max(0f, attackTimer - delta);
+        skillCooldownTimer = Math.max(0f, skillCooldownTimer - delta);
 
         if (behavior != null) {
             behavior.update(session, this, delta);
@@ -105,6 +111,11 @@ public class BattleUnit {
         health = maxHealth;
         attackTimer = 0f;
         skillCharge = 0f;
+        skillCooldownTimer = 0f;
+        shieldHealth = 0f;
+        maxShieldHealth = 0f;
+        flightFuel = 0f;
+        maxFlightFuel = 0f;
         body.setActive(true);
         body.setTransform(spawn, 0f);
         body.setLinearVelocity(0f, 0f);
@@ -117,6 +128,12 @@ public class BattleUnit {
     }
 
     public void damage(float amount) {
+        if (shieldHealth > 0f) {
+            float absorbedDamage = Math.min(shieldHealth, amount);
+            shieldHealth -= absorbedDamage;
+            amount -= absorbedDamage;
+        }
+
         health = Math.max(0f, health - amount);
     }
 
@@ -129,11 +146,26 @@ public class BattleUnit {
     }
 
     public void activateSkill(BattleSession session, Vector2 targetPosition) {
-        if (skill == null || isDead()) {
+        if (skill == null || isDead() || skillCooldownTimer > 0f) {
             return;
         }
 
         skill.activate(session, this, targetPosition);
+        skillCooldownTimer = skill.getCooldown();
+    }
+
+    public void activateShield(float shieldHealth) {
+        this.maxShieldHealth = shieldHealth;
+        this.shieldHealth = shieldHealth;
+    }
+
+    public void fillFlightFuel(float maxFuel) {
+        this.maxFlightFuel = maxFuel;
+        this.flightFuel = maxFuel;
+    }
+
+    public void useFlightFuel(float amount) {
+        flightFuel = Math.max(0f, flightFuel - amount);
     }
 
     public void chargeSkill(float delta, float chargeDuration) {
@@ -151,6 +183,22 @@ public class BattleUnit {
 
     public void resetSkillCharge() {
         skillCharge = 0f;
+    }
+
+    public float getShieldRatio() {
+        if (maxShieldHealth <= 0f) {
+            return 0f;
+        }
+
+        return shieldHealth / maxShieldHealth;
+    }
+
+    public float getFlightFuelRatio() {
+        if (maxFlightFuel <= 0f) {
+            return 0f;
+        }
+
+        return flightFuel / maxFlightFuel;
     }
 
     public void playWalkSound() {

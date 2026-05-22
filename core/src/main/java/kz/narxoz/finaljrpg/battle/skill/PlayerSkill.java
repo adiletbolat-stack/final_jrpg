@@ -6,4 +6,8 @@ import kz.narxoz.finaljrpg.battle.BattleUnit;
 
 public interface PlayerSkill {
     void activate(BattleSession session, BattleUnit player, Vector2 targetPosition);
+
+    default float getCooldown() {
+        return 0f;
+    }
 }

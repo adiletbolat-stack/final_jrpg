@@ -6,18 +6,20 @@ public record BattleInput(
     boolean left,
     boolean right,
     boolean jump,
+    boolean jumpHeld,
     boolean shoot,
     boolean shootHeld,
     boolean shootReleased,
     boolean skill,
     Vector2 aimPoint
 ) {
-    public static final BattleInput EMPTY = new BattleInput(false, false, false, false, false, false, false, new Vector2());
+    public static final BattleInput EMPTY = new BattleInput(false, false, false, false, false, false, false, false, new Vector2());
 
     public BattleInput(
         boolean left,
         boolean right,
         boolean jump,
+        boolean jumpHeld,
         boolean shoot,
         boolean shootHeld,
         boolean shootReleased,
@@ -27,6 +29,7 @@ public record BattleInput(
         this.left = left;
         this.right = right;
         this.jump = jump;
+        this.jumpHeld = jumpHeld;
         this.shoot = shoot;
         this.shootHeld = shootHeld;
         this.shootReleased = shootReleased;

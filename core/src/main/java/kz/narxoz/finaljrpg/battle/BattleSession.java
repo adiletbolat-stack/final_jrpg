@@ -37,6 +37,9 @@ public class BattleSession implements VictorySubject {
     private static final float PLAYER_ONE_CHARGED_SHOT_DURATION = 4f;
     private static final float PLAYER_ONE_CHARGED_SHOT_MIN_DAMAGE = 5f;
     private static final float PLAYER_ONE_CHARGED_SHOT_MAX_DAMAGE = 60f;
+    private static final float PLAYER_THREE_HIGH_JUMP_IMPULSE = 0.35f;
+    private static final float PLAYER_THREE_SLOW_FALL_SPEED = -0.675f;
+    private static final float PLAYER_THREE_AIRBORNE_FUEL_USAGE = 2f;
     private static final int BASE_SCORE = 10000;
     private static final BattleUnitType[][] ENEMY_WAVES = {
         {BattleUnitType.NORMAL, BattleUnitType.HEAVY, BattleUnitType.FLYING},
@@ -156,6 +159,10 @@ public class BattleSession implements VictorySubject {
             Body body = unit.getBody();
             body.applyLinearImpulse(0f, unit.getType().getJumpImpulse(), body.getWorldCenter().x, body.getWorldCenter().y, true);
             unit.playJumpSound();
+        }
+
+        if (isPlayerThree(unit)) {
+            applyPlayerThreeSlowFall(unit, delta);
         }
 
         if (isPlayerOne(unit)) {
@@ -286,6 +293,14 @@ public class BattleSession implements VictorySubject {
         return battleTime;
     }
 
+    public float getPlayerSkillCooldown(int playerIndex) {
+        if (playerIndex < 0 || playerIndex >= players.size()) {
+            return 0f;
+        }
+
+        return players.get(playerIndex).getSkillCooldownTimer();
+    }
+
     @Override
     public void addVictoryObserver(VictoryObserver observer) {
         victoryObservers.add(observer);
@@ -346,15 +361,41 @@ public class BattleSession implements VictorySubject {
         shootChargedShot(unit, input.aimPoint());
     }
 
+    public void activatePlayerThreeHighJump(BattleUnit unit, float maxFuel) {
+        unit.fillFlightFuel(maxFuel);
+        Body body = unit.getBody();
+        body.setAwake(true);
+        body.setLinearVelocity(body.getLinearVelocity().x, Math.max(0f, body.getLinearVelocity().y));
+        body.applyLinearImpulse(0f, PLAYER_THREE_HIGH_JUMP_IMPULSE, body.getWorldCenter().x, body.getWorldCenter().y, true);
+        unit.playJumpSound();
+    }
+
+    private void applyPlayerThreeSlowFall(BattleUnit unit, float delta) {
+        if (unit.getFlightFuel() <= 0f || isGrounded(unit.getBody())) {
+            return;
+        }
+
+        Body body = unit.getBody();
+        float verticalVelocity = body.getLinearVelocity().y;
+
+        if (verticalVelocity < PLAYER_THREE_SLOW_FALL_SPEED) {
+            body.setLinearVelocity(body.getLinearVelocity().x, PLAYER_THREE_SLOW_FALL_SPEED);
+        }
+
+        unit.useFlightFuel(PLAYER_THREE_AIRBORNE_FUEL_USAGE * delta);
+    }
+
     private BattleInput readCurrentInput() {
         boolean shootPressed = Gdx.input.isButtonPressed(Input.Buttons.LEFT);
         boolean shootReleased = previousShootPressed && !shootPressed;
+        boolean jumpPressed = Gdx.input.isKeyPressed(Input.Keys.W);
         previousShootPressed = shootPressed;
 
         return new BattleInput(
             Gdx.input.isKeyPressed(Input.Keys.A),
             Gdx.input.isKeyPressed(Input.Keys.D),
             Gdx.input.isKeyJustPressed(Input.Keys.W),
+            jumpPressed,
             Gdx.input.isButtonJustPressed(Input.Buttons.LEFT),
             shootPressed,
             shootReleased,
@@ -546,6 +587,10 @@ public class BattleSession implements VictorySubject {
         return !players.isEmpty() && players.get(0) == unit;
     }
 
+    private boolean isPlayerThree(BattleUnit unit) {
+        return players.size() > 2 && players.get(2) == unit;
+    }
+
     private BattleUnit findUnitByBody(Body body) {
         for (BattleUnit unit : getAllUnits()) {
             if (unit.getBody() == body) {
@@ -590,6 +635,20 @@ public class BattleSession implements VictorySubject {
             shapeRenderer.rect(x, y + unit.getHeight() + 0.15f, unit.getWidth(), 0.025f);
             shapeRenderer.setColor(Color.CYAN);
             shapeRenderer.rect(x, y + unit.getHeight() + 0.15f, unit.getWidth() * unit.getSkillCharge(), 0.025f);
+        }
+
+        if (players.indexOf(unit) == 1 && unit.getShieldHealth() > 0f) {
+            shapeRenderer.setColor(Color.DARK_GRAY);
+            shapeRenderer.rect(x, y + unit.getHeight() + 0.15f, unit.getWidth(), 0.025f);
+            shapeRenderer.setColor(Color.RED);
+            shapeRenderer.rect(x, y + unit.getHeight() + 0.15f, unit.getWidth() * unit.getShieldRatio(), 0.025f);
+        }
+
+        if (players.indexOf(unit) == 2 && unit.getMaxFlightFuel() > 0f) {
+            shapeRenderer.setColor(Color.DARK_GRAY);
+            shapeRenderer.rect(x, y + unit.getHeight() + 0.15f, unit.getWidth(), 0.025f);
+            shapeRenderer.setColor(Color.ORANGE);
+            shapeRenderer.rect(x, y + unit.getHeight() + 0.15f, unit.getWidth() * unit.getFlightFuelRatio(), 0.025f);
         }
     }
 

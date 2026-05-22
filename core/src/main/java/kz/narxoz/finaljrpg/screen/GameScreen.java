@@ -53,6 +53,7 @@ public class GameScreen implements Screen {
 
         initialized = true;
         world = new World(new Vector2(0, -9.8f), true);
+        world.setContactListener(new OneWayPlatformContactListener());
         debugRenderer = new Box2DDebugRenderer();
         camera = new OrthographicCamera(SCREEN_WIDTH, SCREEN_HEIGHT);
         camera.setToOrtho(false, (SCREEN_WIDTH / 4f) / PPM, (SCREEN_HEIGHT / 4f) / PPM);
@@ -147,13 +148,59 @@ public class GameScreen implements Screen {
             (Gdx.graphics.getWidth() - hudLayout.width) / 2f,
             Gdx.graphics.getHeight() - 20f
         );
+        renderSkillCooldown("P1 F", battleSession.getPlayerSkillCooldown(0), 16f);
+        renderSkillCooldown("P2 F", battleSession.getPlayerSkillCooldown(1), 38f);
         batch.end();
+    }
+
+    private void renderSkillCooldown(String label, float cooldown, float y) {
+        if (cooldown <= 0f) {
+            return;
+        }
+
+        String text = String.format(java.util.Locale.US, "%s: %.1f", label, cooldown);
+        hudLayout.setText(hudFont, text);
+        hudFont.draw(batch, hudLayout, Gdx.graphics.getWidth() - hudLayout.width - 16f, y);
     }
 
     private String formatTime(float seconds) {
         int minutes = (int) (seconds / 60f);
         float remainingSeconds = seconds - minutes * 60f;
         return String.format(java.util.Locale.US, "%02d:%05.2f", minutes, remainingSeconds);
+    }
+
+    private static class OneWayPlatformContactListener implements ContactListener {
+        @Override
+        public void beginContact(Contact contact) {
+        }
+
+        @Override
+        public void endContact(Contact contact) {
+        }
+
+        @Override
+        public void preSolve(Contact contact, Manifold oldManifold) {
+            Fixture fixtureA = contact.getFixtureA();
+            Fixture fixtureB = contact.getFixtureB();
+            boolean playerA = isCategory(fixtureA, PLAYER);
+            boolean playerB = isCategory(fixtureB, PLAYER);
+            boolean terrainA = isCategory(fixtureA, TERRAIN);
+            boolean terrainB = isCategory(fixtureB, TERRAIN);
+
+            if (playerA && terrainB && contact.getWorldManifold().getNormal().y > 0.5f) {
+                contact.setEnabled(false);
+            } else if (terrainA && playerB && contact.getWorldManifold().getNormal().y < -0.5f) {
+                contact.setEnabled(false);
+            }
+        }
+
+        @Override
+        public void postSolve(Contact contact, ContactImpulse impulse) {
+        }
+
+        private static boolean isCategory(Fixture fixture, short category) {
+            return (fixture.getFilterData().categoryBits & category) != 0;
+        }
     }
 
     @Override
