@@ -11,6 +11,10 @@ import kz.narxoz.finaljrpg.Constants;
 import kz.narxoz.finaljrpg.audio.BattleSoundProfile;
 import kz.narxoz.finaljrpg.battle.behavior.EnemyRallyBehavior;
 import kz.narxoz.finaljrpg.battle.behavior.PlayerReplayBehavior;
+import kz.narxoz.finaljrpg.battle.shooting.ChargedShotMode;
+import kz.narxoz.finaljrpg.battle.shooting.FullAutoMode;
+import kz.narxoz.finaljrpg.battle.shooting.ShootingMode;
+import kz.narxoz.finaljrpg.battle.shooting.SpreadShotMode;
 import kz.narxoz.finaljrpg.battle.skill.IndexedPlayerSkillStrategy;
 import kz.narxoz.finaljrpg.battle.skill.PlayerSkillCreationStrategy;
 import kz.narxoz.finaljrpg.battle.unit.FlyingEnemy;
@@ -53,6 +57,7 @@ public class BattleUnitFactory {
             new Color(0.25f, 0.65f, 1f, 1f),
             getPlayerSoundProfile(index),
             skillCreationStrategy.createSkill(index),
+            getPlayerShootingMode(index),
             spriteKey,
             scale
         );
@@ -82,6 +87,14 @@ public class BattleUnitFactory {
 
     private BattleSoundProfile getPlayerSoundProfile(int index) {
         return PLAYER_SOUND_PROFILES[Math.min(index, PLAYER_SOUND_PROFILES.length - 1)];
+    }
+
+    private ShootingMode getPlayerShootingMode(int index) {
+        return switch (index) {
+            case 0 -> new ChargedShotMode();
+            case 1 -> new SpreadShotMode();
+            default -> new FullAutoMode();
+        };
     }
 
     private String getEnemySpriteKey(BattleUnitType type) {

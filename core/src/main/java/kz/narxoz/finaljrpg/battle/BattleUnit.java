@@ -7,6 +7,7 @@ import kz.narxoz.finaljrpg.audio.BattleSoundPlayer;
 import kz.narxoz.finaljrpg.audio.BattleSoundProfile;
 import kz.narxoz.finaljrpg.battle.behavior.UnitBehavior;
 import kz.narxoz.finaljrpg.battle.movement.BattleMovement;
+import kz.narxoz.finaljrpg.battle.shooting.ShootingMode;
 import kz.narxoz.finaljrpg.battle.skill.PlayerSkill;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,6 +32,7 @@ public class BattleUnit {
     private final BattleMovement movement;
     private final BattleSoundProfile soundProfile;
     private final PlayerSkill skill;
+    private final ShootingMode shootingMode;
     private String spriteKey;
     private ObjectScale scale;
 
@@ -60,6 +62,7 @@ public class BattleUnit {
         this.movement = Objects.requireNonNull(builder.movement, "movement");
         this.soundProfile = builder.soundProfile == null ? BattleSoundProfile.EMPTY : builder.soundProfile;
         this.skill = builder.skill;
+        this.shootingMode = builder.shootingMode;
         this.spriteKey = builder.spriteKey;
         this.scale = builder.scale == null ? SpriteScales.defaultScale(spriteKey) : builder.scale;
         this.health = maxHealth;
@@ -214,6 +217,7 @@ public class BattleUnit {
         private BattleMovement movement;
         private BattleSoundProfile soundProfile = BattleSoundProfile.EMPTY;
         private PlayerSkill skill;
+        private ShootingMode shootingMode;
         private String spriteKey;
         private ObjectScale scale;
 
@@ -264,6 +268,11 @@ public class BattleUnit {
 
         public Builder skill(PlayerSkill skill) {
             this.skill = skill;
+            return this;
+        }
+
+        public Builder shootingMode(ShootingMode shootingMode) {
+            this.shootingMode = shootingMode;
             return this;
         }
 

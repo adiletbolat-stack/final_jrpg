@@ -44,11 +44,7 @@ public class BattleSession implements VictorySubject {
     private static final float PROJECTILE_SPEED = 4f;
     private static final float PROJECTILE_DRAW_SIZE = 8f / PPM;
     private static final float TELEPORT_PROJECTILE_SPEED = 12f;
-    private static final float PROJECTILE_SPAWN_PADDING = 0.07f;
-    private static final float PLAYER_ONE_CHARGED_SHOT_SPEED = 8f;
-    private static final float PLAYER_ONE_CHARGED_SHOT_DURATION = 4f;
-    private static final float PLAYER_ONE_CHARGED_SHOT_MIN_DAMAGE = 5f;
-    private static final float PLAYER_ONE_CHARGED_SHOT_MAX_DAMAGE = 60f;
+    private static final float PROJECTILE_SPAWN_PADDING = 0.05f;
     private static final float PLAYER_THREE_HIGH_JUMP_IMPULSE = 0.35f;
     private static final float PLAYER_THREE_SLOW_FALL_SPEED = -0.675f;
     private static final float PLAYER_THREE_AIRBORNE_FUEL_USAGE = 2f;
@@ -200,10 +196,8 @@ public class BattleSession implements VictorySubject {
             applyPlayerThreeSlowFall(unit, delta);
         }
 
-        if (isPlayerOne(unit)) {
-            applyPlayerOneShooting(unit, input, delta);
-        } else if (input.shoot() && unit.canShoot()) {
-            shootAt(unit, input.aimPoint());
+        if (unit.getShootingMode() != null) {
+            unit.getShootingMode().shoot(this, unit, input, delta);
         }
 
         if (input.skill()) {
@@ -266,7 +260,7 @@ public class BattleSession implements VictorySubject {
     }
 
     public void shootAt(BattleUnit shooter, Vector2 targetPosition) {
-        shootProjectile(shooter, targetPosition, PROJECTILE_SPEED, shooter.getType().getDamage(), null);
+        shootProjectile(shooter, targetPosition, PROJECTILE_SPEED, shooter.getType().getDamage());
         shooter.resetAttackTimer();
         shooter.playShootSound();
     }
@@ -276,22 +270,22 @@ public class BattleSession implements VictorySubject {
         shooter.playShootSound();
     }
 
-    public void shootChargedShot(BattleUnit shooter, Vector2 targetPosition) {
-        float damage = shooter.getSkillChargeDamage(PLAYER_ONE_CHARGED_SHOT_MIN_DAMAGE, PLAYER_ONE_CHARGED_SHOT_MAX_DAMAGE);
-        shooter.resetSkillCharge();
-        shootProjectile(shooter, targetPosition, PLAYER_ONE_CHARGED_SHOT_SPEED, damage, null);
-        shooter.resetAttackTimer();
-        shooter.playShootSound();
+    public void shootProjectile(BattleUnit shooter, Vector2 targetPosition, float speed, float damage) {
+        shootProjectile(shooter, targetPosition, speed, damage, null);
     }
 
-    private void shootProjectile(
+    public void shootProjectileRotated(BattleUnit shooter, Vector2 targetPosition, float speed, float damage, float angleOffsetDegrees) {
+        shootProjectile(shooter, targetPosition, speed, damage, null, false, angleOffsetDegrees);
+    }
+
+    public void shootProjectile(
         BattleUnit shooter,
         Vector2 targetPosition,
         float speed,
         float damage,
         ProjectileHitEffect hitEffect
     ) {
-        shootProjectile(shooter, targetPosition, speed, damage, hitEffect, false);
+        shootProjectile(shooter, targetPosition, speed, damage, hitEffect, false, 0f);
     }
 
     private void shootProjectile(
@@ -301,6 +295,18 @@ public class BattleSession implements VictorySubject {
         float damage,
         ProjectileHitEffect hitEffect,
         boolean collidesWithTerrain
+    ) {
+        shootProjectile(shooter, targetPosition, speed, damage, hitEffect, collidesWithTerrain, 0f);
+    }
+
+    private void shootProjectile(
+        BattleUnit shooter,
+        Vector2 targetPosition,
+        float speed,
+        float damage,
+        ProjectileHitEffect hitEffect,
+        boolean collidesWithTerrain,
+        float angleOffsetDegrees
     ) {
         Vector2 direction = new Vector2(targetPosition).sub(shooter.getPosition());
 
@@ -313,8 +319,9 @@ public class BattleSession implements VictorySubject {
         }
 
         direction.nor();
+        direction.rotateDeg(angleOffsetDegrees);
         Vector2 spawnPosition = new Vector2(shooter.getPosition())
-            .mulAdd(direction, Math.max(shooter.getWidth(), shooter.getHeight()) / 2f + PROJECTILE_SPAWN_PADDING);
+            .mulAdd(direction, getProjectileSpawnDistance(shooter, direction));
         Vector2 velocity = new Vector2(direction).scl(speed);
 
         projectiles.add(new Projectile(
@@ -328,6 +335,13 @@ public class BattleSession implements VictorySubject {
             projectileSpriteFactory.getForShooter(shooter)
         ));
         triggerShootAnimation(shooter, isFacingRightFromAim(direction));
+    }
+
+    private float getProjectileSpawnDistance(BattleUnit shooter, Vector2 direction) {
+        float halfWidth = shooter.getWidth() / 2f;
+        float halfHeight = shooter.getHeight() / 2f;
+        float halfExtentInShotDirection = Math.abs(direction.x) * halfWidth + Math.abs(direction.y) * halfHeight;
+        return halfExtentInShotDirection + PROJECTILE_SPAWN_PADDING;
     }
 
     public Vector2 getCameraTarget() {
@@ -396,18 +410,6 @@ public class BattleSession implements VictorySubject {
         for (CharacterAnimationState state : playerAnimationStates.values()) {
             state.reset();
         }
-    }
-
-    private void applyPlayerOneShooting(BattleUnit unit, BattleInput input, float delta) {
-        if (input.shootHeld()) {
-            unit.chargeSkill(delta, PLAYER_ONE_CHARGED_SHOT_DURATION);
-        }
-
-        if (!input.shootReleased() || !unit.canShoot()) {
-            return;
-        }
-
-        shootChargedShot(unit, input.aimPoint());
     }
 
     public void activatePlayerThreeHighJump(BattleUnit unit, float maxFuel) {
