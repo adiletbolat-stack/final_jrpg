@@ -1,6 +1,7 @@
 package kz.narxoz.finaljrpg.battle;
 
 import com.badlogic.gdx.math.Vector2;
+import kz.narxoz.finaljrpg.battle.render.ProjectileSprite;
 import lombok.Getter;
 
 public class Projectile {
@@ -12,7 +13,10 @@ public class Projectile {
     private final Vector2 position;
     @Getter
     private final Vector2 previousPosition;
+    @Getter
     private final Vector2 velocity;
+    @Getter
+    private final ProjectileSprite sprite;
     @Getter
     private final float damage;
     private final ProjectileHitEffect hitEffect;
@@ -22,7 +26,7 @@ public class Projectile {
     private boolean alive = true;
 
     public Projectile(Team team, Vector2 position, Vector2 velocity, float damage) {
-        this(team, null, position, velocity, damage, null, false);
+        this(team, null, position, velocity, damage, null, false, null);
     }
 
     public Projectile(
@@ -32,13 +36,15 @@ public class Projectile {
         Vector2 velocity,
         float damage,
         ProjectileHitEffect hitEffect,
-        boolean collidesWithTerrain
+        boolean collidesWithTerrain,
+        ProjectileSprite sprite
     ) {
         this.team = team;
         this.owner = owner;
         this.position = new Vector2(position);
         this.previousPosition = new Vector2(position);
         this.velocity = new Vector2(velocity);
+        this.sprite = sprite;
         this.damage = damage;
         this.hitEffect = hitEffect;
         this.collidesWithTerrain = collidesWithTerrain;
