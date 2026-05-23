@@ -1,52 +1,70 @@
-# final_jrpg
+# Super Time Bros
 
-`final_jrpg` is a libGDX tactical action prototype about replaying a fight through several player characters. The player controls three characters one by one, records actions for each of them, and can switch back to another character with a time reset. Previously recorded characters replay their actions, while enemies react to the current battle state.
+`Super Time Bros` is a libGDX tactical action game about winning one battle by cooperating with your own past runs. You control three heroes one at a time. When you switch heroes, the fight restarts from the beginning, the newly selected hero becomes playable, and the other heroes replay the inputs you recorded for them on previous timelines.
 
-## Game Idea
-
-The battle starts with three enemies and three player characters entering from spawn points on the Tiled map. Enemies first move toward their assigned points, then switch to attacking the nearest player character. The player wins by destroying all enemies.
-
-Enemy types:
-
-- Normal enemy: `16x32`
-- Heavy enemy: `32x32`
-- Flying enemy: `16x16`
-
-Player characters currently use placeholder boxes and share the normal character size. Textures can be added later without changing the battle structure.
+The goal is to clear every enemy wave as quickly as possible while keeping your team alive. Victory shows your final time and score.
 
 ## Controls
 
 - `A` / `D`: move left or right
 - `W`: jump
-- Left mouse button: shoot toward the cursor
-- `1`, `2`, `3`: switch to a specific player character
-- `TAB`: switch to the next player character
-- `Z`: zoom camera out
-- `ESC`: pause or resume from pause
+- Mouse cursor: aim
+- Left mouse button: use the active character's weapon
+- `F`: use the active character's special ability
+- `1`, `2`, `3`: switch directly to Player 1, Player 2, or Player 3
+- `TAB`: switch to the next player
+- `Z`: hold to zoom the camera out
+- `F3`: toggle debug rendering
+- `ESC`: pause or resume the game
 
-## Battle Rules
+## Game Mechanics
 
-- Player characters do not collide with each other.
-- Player characters still collide with enemies and the map.
-- Enemies collide with the map and player characters.
-- Projectiles damage only the opposite team.
-- The timer is shown at the top center of the game screen.
-- When all enemies are defeated, the victory screen shows final time and score.
+### Time Replay
+
+The game records the active player's movement, aiming, shooting, and skill inputs each frame. When you switch to another player, the battle timer resets, enemies and projectiles are respawned, and all non-active players replay the actions recorded for their timelines.
+
+Use this to build coordinated attacks: for example, record one hero drawing fire, switch timelines, then use another hero to attack while the first one repeats the earlier route.
+
+### Player Characters
+
+Each hero has a different weapon and special ability:
+
+- Player 1: charged railgun shot. Hold the left mouse button to charge, then release to fire. Press `F` to fire a teleport projectile that moves the player to its impact point.
+- Player 2: shotgun spread shot. Click to fire five projectiles in a cone. Press `F` to activate a temporary shield.
+- Player 3: full-auto gun. Hold the left mouse button to fire rapid shots with light spread. Press `F` to perform a high jump and gain limited slow-fall fuel.
+
+### Enemies and Waves
+
+Enemies spawn in waves and first move toward their rally points. After reaching position, or after touching a player, they attack the nearest living player. Flying enemies can move vertically, while normal and heavy enemies stay grounded.
+
+Enemy types:
+
+- Normal enemy: balanced health, speed, and damage
+- Heavy enemy: slower, larger, higher health, and higher damage
+- Flying enemy: fast, low health, and able to track targets vertically
+
+Projectiles damage only the opposite team. Player characters do not collide with each other, but they still collide with enemies and the map.
+
+### Scoring
+
+The score starts from a base value, loses points as the battle timer increases, and gains a bonus from surviving player health. Faster clears with healthier heroes score higher.
 
 ## Project Structure
 
-- `core`: shared game logic, screens, battle systems, commands, and UI.
-- `lwjgl3`: desktop launcher.
-- `assets`: textures, UI skin, and Tiled map files.
+- `core`: shared game logic, screens, battle systems, commands, and UI
+- `lwjgl3`: desktop launcher
+- `assets`: textures, audio, UI skin, and Tiled map files
 
 Important battle packages:
 
-- `battle`: battle session, units, projectiles, timeline, factories, and shared types.
-- `battle.behavior`: behavior strategies for players and enemies.
-- `battle.movement`: movement strategies for different unit types.
-- `battle.unit`: concrete player and enemy classes.
-- `battle.event`: victory observer event types.
-- `command`: screen transition commands.
+- `battle`: battle session, units, projectiles, timeline, factories, and shared types
+- `battle.behavior`: behavior strategies for players and enemies
+- `battle.movement`: movement strategies for different unit types
+- `battle.shooting`: weapon firing modes
+- `battle.skill`: player special abilities
+- `battle.unit`: concrete player and enemy classes
+- `battle.event`: victory observer event types
+- `command`: screen transition commands
 
 ## Running
 
@@ -66,4 +84,10 @@ Build the project:
 
 ```bash
 ./gradlew build
+```
+
+The repository also includes a packaged desktop jar:
+
+```bash
+java -jar final_jrpg-1.0.0.jar
 ```
